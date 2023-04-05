@@ -95,7 +95,7 @@ const SettingsComponent = () => {
         const wordClock = values[ 'WordClockDefaultSettings' ];
         const digital = values[ 'DigitalClockDefaultSettings' ];
         const countdown = values[ 'TimerSettings' ];
-        const flipclock = values['FlipClock'];
+        const flipclock = values['FlipClockDefaultSettings'];
         const clockType = get(values, `${path}.clockType`);
         switch (clockType) {
             case 'wordclock':
