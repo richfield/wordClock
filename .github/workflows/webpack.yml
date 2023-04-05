@@ -27,4 +27,4 @@ jobs:
         npm run build
     - name: Copy file
       run: |
-       cp ${{ github.workspace }}/dist/* /data/www/woordklok/
+       cp -r ${{ github.workspace }}/dist/* /data/www/woordklok/
