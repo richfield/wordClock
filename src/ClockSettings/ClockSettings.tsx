@@ -41,7 +41,7 @@ export const ClockSettings = (props: { path: string, title?: string }) => {
             <Form.Group as={Row} className='mb-3'>
                 <Form.Label column>Laat seconden zien</Form.Label>
                 <Col>
-                    <Field name={`${props.path}.showSeconds`} component={FormCheckbox} />
+                    <Field name={`${props.path}.showSeconds`} type='checkbox' component={FormCheckbox} />
                 </Col>
             </Form.Group>
         </Card.Body>
