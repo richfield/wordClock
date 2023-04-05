@@ -96,7 +96,7 @@ const FlipClock: React.FC<ClockComponentProps> = (props) => {
   } = state;
 
   const clockWidth = showSeconds ? 500 : 325;
-  const scale = showSeconds ? (window.innerWidth / sizeFactor) / 6.25 : (window.innerWidth / sizeFactor) / 4;
+  const scale = showSeconds ? (window.innerWidth / 625) * (sizeFactor / 100) : (window.innerWidth / 400) * (sizeFactor / 100);
   const flipClockStyle: React.CSSProperties = {
     paddingTop: props.clockSettings.topDistance,
     display: 'flex',
