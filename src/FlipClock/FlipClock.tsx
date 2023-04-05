@@ -108,9 +108,8 @@ const FlipClock: React.FC<ClockComponentProps> = (props) => {
     backgroundColor: props.clockSettings.shadeColor,
     color: props.clockSettings.foreGroundColor,
     borderColor: lightenDarkenColor(props.clockSettings.shadeColor, 200, true),
-    fontFamily: 'Arial',
-    fontWeight: 'bold'
-
+    fontFamily: 'Oswald',
+    fontSize: '100px'
   };
   document.body.style.backgroundColor = backgroundColor;
   return (

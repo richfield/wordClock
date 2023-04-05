@@ -114,7 +114,6 @@ const SettingsComponent = () => {
             default:
                 break;
         }
-
     };
 
     const ResetToDefault = (props: { path: string }) => {
