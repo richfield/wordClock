@@ -1,6 +1,7 @@
 import { Card, Col, Form, Row } from 'react-bootstrap';
 import { Field } from 'react-final-form';
 import { FormInput } from '../FormControls/FormInput';
+import { FormCheckbox } from '../FormControls/FormCheckbox';
 
 export const ClockSettings = (props: { path: string, title?: string }) => {
 
@@ -35,6 +36,12 @@ export const ClockSettings = (props: { path: string, title?: string }) => {
                 <Form.Label column>Schaalfactor</Form.Label>
                 <Col>
                     <Field name={`${props.path}.sizeFactor`} type='number' component={FormInput} />
+                </Col>
+            </Form.Group>
+            <Form.Group as={Row} className='mb-3'>
+                <Form.Label column>Laat seconden zien</Form.Label>
+                <Col>
+                    <Field name={`${props.path}.showSeconds`} component={FormCheckbox} />
                 </Col>
             </Form.Group>
         </Card.Body>

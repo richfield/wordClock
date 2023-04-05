@@ -10,11 +10,11 @@ export const getErrorMessage = (error: unknown) => {
     return String(error);
 };
 
-export const toColor = (input: string) : ColorFormat => {
-    if(input.length !== 7) {
+export const toColor = (input: string): ColorFormat => {
+    if (input.length !== 7) {
         return '#333333';
     }
-    if(!input.startsWith('#')) {
+    if (!input.startsWith('#')) {
         return '#333333';
     }
     return input as ColorFormat;
@@ -52,4 +52,35 @@ export const invertHex = (hex: string) => {
 
 export const formatTime = (time: number, format: string) => {
     return moment.utc(moment.duration(time, 'second').asMilliseconds()).format(format);
+};
+
+export const lightenDarkenColor = (col: string, amt: number, basedOnColor?: boolean) => {
+    var usePound = false;
+    if (col[ 0 ] === '#') {
+        col = col.slice(1);
+        usePound = true;
+    }
+
+    var num = parseInt(col, 16);
+
+    if (basedOnColor && num > 8947848) {
+        amt = 0-amt;
+    }
+
+    var r = (num >> 16) + amt;
+
+    if (r > 255) r = 255;
+    else if (r < 0) r = 0;
+
+    var b = ((num >> 8) & 0x00FF) + amt;
+
+    if (b > 255) b = 255;
+    else if (b < 0) b = 0;
+
+    var g = (num & 0x0000FF) + amt;
+
+    if (g > 255) g = 255;
+    else if (g < 0) g = 0;
+
+    return (usePound ? '#' : '') + (g | (b << 8) | (r << 16)).toString(16);
 };
