@@ -111,6 +111,7 @@ const FlipClock: React.FC<ClockComponentProps> = (props) => {
     fontFamily: 'Oswald',
     fontSize: '100px'
   };
+
   document.body.style.backgroundColor = backgroundColor;
   return (
     <Container fluid style={{ display: 'flex', justifyContent: 'center' }}>
