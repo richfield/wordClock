@@ -2,9 +2,12 @@ import moment from 'moment';
 import { Container } from 'react-bootstrap';
 import { ClockSettings } from '../types';
 import { useEffect } from 'react';
+import { lightenDarkenColor } from '../helpers';
 
 function DigitalClock(props: { time: Date, clockSettings: ClockSettings }) {
-    const splitterColor = props.time.getSeconds() % 2 === 0 ? props.clockSettings.foreGroundColor : props.clockSettings.backgroundColor;
+    const splitterColor = props.clockSettings.showSeconds ?
+        props.clockSettings.foreGroundColor :
+        props.time.getSeconds() % 2 === 0 ? props.clockSettings.foreGroundColor : props.clockSettings.shadeColor;
 
     useEffect(() => {
         document.body.style.backgroundColor = props.clockSettings.backgroundColor;
@@ -16,15 +19,21 @@ function DigitalClock(props: { time: Date, clockSettings: ClockSettings }) {
         fontWeight: 'bold',
         color: props.clockSettings.foreGroundColor,
         fontFamily: 'alarm clock',
-        textShadow: `${props.clockSettings.sizeFactor / 100}vmin ${props.clockSettings.sizeFactor / 100}vmin ${props.clockSettings.shadeColor}`,
-        display: 'flex',
+        display: 'grid',
         justifyContent: 'center',
         lineHeight: `${props.clockSettings.sizeFactor}vmin`
     };
+
     return (
         <Container style={style} >
-            {moment(props.time).format('HH')}<div style={{ display: 'contents', color: splitterColor }}>:</div>{moment(props.time).format('mm')}
-        </Container>
+            <div style={{ zIndex: 1, gridColumn: 1, gridRow: 1 }}>
+                {moment(props.time).format('HH')}<div style={{ display: 'contents', color: splitterColor }}>:</div>{moment(props.time).format('mm')}{props.clockSettings.showSeconds && `:${moment(props.time).format('ss')}`}
+            </div>
+            <div style={{ zIndex: -1, gridColumn: 1, gridRow: 1, color: props.clockSettings.shadeColor }}>
+                88:88{props.clockSettings.showSeconds && ':88'}
+            </div>
+        </Container >
+
     );
 }
 
