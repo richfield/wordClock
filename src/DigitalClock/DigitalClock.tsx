@@ -2,7 +2,6 @@ import moment from 'moment';
 import { Container } from 'react-bootstrap';
 import { ClockSettings } from '../types';
 import { useEffect } from 'react';
-import { lightenDarkenColor } from '../helpers';
 
 function DigitalClock(props: { time: Date, clockSettings: ClockSettings }) {
     const splitterColor = props.clockSettings.showSeconds ?
