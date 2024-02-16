@@ -30,6 +30,7 @@
         "react-final-form-arrays": "^3.1.4",
         "react-jwt": "^1.1.8",
         "react-router-dom": "^6.9.0",
+        "react-screen-wake-lock": "^3.0.2",
         "use-sound": "^4.0.1",
         "vite-plugin-babel-macros": "^1.0.6"
     },
