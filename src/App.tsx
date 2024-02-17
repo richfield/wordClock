@@ -24,11 +24,11 @@ function App(): JSX.Element {
   useEffect(() => {
     // Use this to lock the screen when the component mounts
     request();
-
+    console.log('Request');
     // Optionally, release the screen lock when the component unmounts
-    return () => {
-      release();
-    };
+    // return () => {
+    //   release();
+    // };
   }, [ release, request ]);
 
   const { ForceReload, RefreshRate } = settings;
