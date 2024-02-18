@@ -20,16 +20,11 @@ function App(): JSX.Element {
   }, []);
 
   setTimeout(updateTime, 1000);
-  const { request, release } = useWakeLock();
+  const { request } = useWakeLock();
   useEffect(() => {
     // Use this to lock the screen when the component mounts
     request();
-    console.log('Request');
-    // Optionally, release the screen lock when the component unmounts
-    // return () => {
-    //   release();
-    // };
-  }, [ release, request ]);
+  }, [ request ]);
 
   const { ForceReload, RefreshRate } = settings;
   const needsRefresh = time.getUTCSeconds() % RefreshRate === 0;
