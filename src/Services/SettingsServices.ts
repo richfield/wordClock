@@ -48,7 +48,7 @@ const getSettings = async (): Promise<Settings> => {
     const decodedToken = jwtDecode<JwtPayload>(localStorage.getItem('token') || '');
     if (decodedToken && decodedToken.exp && (decodedToken.exp * 1000) > new Date().getTime()) {
         const result = await fetchData('settings', 'GET');
-        return JSON.parse(result);
+        return typeof(result) == 'string' ?  JSON.parse(result) : result;
     }
     return defaultSettings;
 };

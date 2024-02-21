@@ -38,6 +38,7 @@ interface Settings {
     DigitalClockDefaultSettings: ClockSettings,
     TimerSettings: ClockSettings,
     FlipClockDefaultSettings: ClockSettings,
+    ClockClock24DefaultSettings: ClockSettings,
     Timer: number
 
 }
@@ -57,6 +58,21 @@ interface ClockComponentProps {
     timer?: number,
     finished?: () => void
 }
+
+
+export type Rotation = number;
+export type Clock = {
+    hours: Rotation;
+    minutes: Rotation;
+    animationTime?: number;
+    animationDelay?: number;
+    animationType?: AnimationType;
+};
+export type Line = [ Clock, Clock ];
+export type Number = [ Line, Line, Line ];
+export type Timer = [ Number, Number, Number, Number ];
+
+export type AnimationType = 'start' | 'end';
 
 export {
     User,

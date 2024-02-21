@@ -9,7 +9,7 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     -webkit-text-size-adjust: 100%;
-    --clock-backgound-color: #141414;
+    --clock-background-color: #141414;
     --needle_background_color: #c9c9c9;
     --clock-padding: 30px;
     --clock-phone-padding: 10px;
@@ -75,7 +75,7 @@ button:focus-visible {
   left: 50%;
   padding: 10px;
   color: var(--needle_background_color);
-  background-color: var(--clock-backgound-color);
+  background-color: var(--clock-background-color);
   transform: translateX(-50%);
   font-family: Helvetica, sans-serif;
   font-size: 14px;
@@ -95,7 +95,7 @@ button:focus-visible {
   font-size: 10px;
   font-family: var(--font-family);
   text-align: center;
-  color: var(--clock-backgound-color);
+  color: var(--clock-background-color);
 }
 .clockclock24 {
   position: absolute;

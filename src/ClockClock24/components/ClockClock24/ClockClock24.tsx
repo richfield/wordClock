@@ -2,7 +2,7 @@ import { last } from 'ramda';
 import React, { Component } from 'react';
 import ReactGA from 'react-ga';
 
-import { Timer } from '../../types';
+import { Timer } from '../../../types';
 import {
   NB_COLUMN_CLOCKS,
   ANIMATION_TIME,
@@ -24,6 +24,7 @@ import { run, resetTimer } from '../../utils/engine';
 import { getTimeTimer } from '../../utils/timers';
 
 import { Number } from './../Number/Number';
+import { ClockComponentProps } from '../../../types';
 
 const ONE_MILLI = 1000;
 const ONE_MINUTES_IN_MILLI = 60 * ONE_MILLI;
@@ -37,7 +38,6 @@ const getRemainingTime = (): number => {
   return ONE_MINUTES_IN_MILLI - secondsInMilli;
 };
 
-type ClockClock24Props = {};
 type ClockClock24State = {
   timer: Timer;
   animationTime: number;
@@ -58,8 +58,9 @@ const getClockSize = (): number => {
   return screenClockSize < CLOCK_MAX_SIZE ? screenClockSize : CLOCK_MAX_SIZE;
 };
 
+
 export default class ClockClock24 extends Component<
-  ClockClock24Props,
+  ClockComponentProps,
   ClockClock24State
 > {
   private timeout?: Timeout;
@@ -84,6 +85,7 @@ export default class ClockClock24 extends Component<
       },
       false,
     );
+    document.body.style.backgroundColor = this.props.clockSettings.backgroundColor;
 
     window.addEventListener('resize', () => {
       ReactGA.event({
@@ -155,14 +157,30 @@ export default class ClockClock24 extends Component<
     }
   }
 
+  clockclock24 = {
+    display: 'flex',
+    padding: 'var(--clock-padding)',
+    backgroundColor: this.props.clockSettings.backgroundColor,
+    backgroundImage: `radial-gradient(ellipse, ${this.props.clockSettings.foreGroundColor} 0%, ${this.props.clockSettings.backgroundColor} 60%)`,
+    boxShadow: '-30px -3px 21px 10px rgba(0, 0, 0, 0.15)'
+  };
+
   render() {
     const { timer, clockSize } = this.state;
+    const { clockSettings: { sizeFactor, topDistance } } = this.props;
+    const scale = sizeFactor/100;
+    const clockClockStyle: React.CSSProperties = {
+      paddingTop: topDistance,
+      display: 'flex',
+      transform: `scale(${scale})`,
+      justifyContent: 'center'
+    };
 
     return (
-      <div className="clockclock24_container">
-        <div className="clockclock24">
+      <div style={clockClockStyle}>
+        <div style={this.clockclock24}>
           {timer.map((number, index) => (
-            <Number key={index} numberLines={number} options={{ clockSize }} />
+            <Number key={index} numberLines={number} options={{ clockSize }} settings={this.props.clockSettings}/>
           ))}
         </div>
       </div>

@@ -5,17 +5,17 @@
   width: 100%;
   font-size: 11px;
   text-align: center;
-  color: var(--clock-backgound-color);
+  color: var(--clock-background-color);
   font-family: var(--font-family);
 }
 .clockclock24 {
   display: flex;
   padding: var(--clock-padding);
-  background-color: var(--clock-backgound-color);
+  background-color: var(--clock-background-color);
   background-image: radial-gradient(
     ellipse,
     #232323 0%,
-    var(--clock-backgound-color) 60%
+    var(--clock-background-color) 60%
   );
   box-shadow: -30px -3px 21px 10px rgba(0, 0, 0, 0.15);
 }
@@ -33,7 +33,7 @@
 
 @media screen and (max-width: 1100px) {
   html {
-    background-color: var(--clock-backgound-color);
+    background-color: var(--clock-background-color);
   }
   .clockclock24 {
     padding: var(--clock-phone-padding);

@@ -96,6 +96,7 @@ const SettingsComponent = () => {
         const digital = values[ 'DigitalClockDefaultSettings' ];
         const countdown = values[ 'TimerSettings' ];
         const flipclock = values['FlipClockDefaultSettings'];
+        const clockClock24 = values['ClockClock24DefaultSettings'];
         const clockType = get(values, `${path}.clockType`);
         switch (clockType) {
             case 'wordclock':
@@ -110,7 +111,9 @@ const SettingsComponent = () => {
             case 'flipclock':
                 change(`${path}.clockSettings`, flipclock);
                 break;
-
+            case 'clockClock24':
+                change(`${path}.clockSettings`, clockClock24);
+                break;
             default:
                 break;
         }
@@ -348,7 +351,7 @@ const SettingsComponent = () => {
                                             <Accordion.Item eventKey="4">
                                                 <Accordion.Header>Instellingen ClockClock24</Accordion.Header>
                                                 <Accordion.Body>
-                                                    <ClockSettings path='ClockClock24' />
+                                                    <ClockSettings path='ClockClock24DefaultSettings' />
                                                 </Accordion.Body>
                                             </Accordion.Item>
                                         </Accordion>
