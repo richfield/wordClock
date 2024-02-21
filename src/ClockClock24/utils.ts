@@ -1,5 +1,5 @@
 import { pipe, flatten, propOr, descend, sort, head } from 'ramda';
-import { Timer, Clock } from './types';
+import { Timer, Clock } from '../types';
 
 const noop = () => {};
 const requestTimeout = (

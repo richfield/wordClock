@@ -1,4 +1,4 @@
-import { Number, Timer } from '../types';
+import { Number, Timer } from '../../types';
 import utils from './utils';
 
 const ALL_OBLIQUES: Number = [

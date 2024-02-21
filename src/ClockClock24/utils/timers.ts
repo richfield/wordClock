@@ -1,4 +1,4 @@
-import { Timer } from '../types';
+import { Timer } from '../../types';
 
 import NUMBERS from '../constants/numbers';
 import SHAPES, { ShapeType } from '../constants/shapes';

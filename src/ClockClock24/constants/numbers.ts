@@ -1,4 +1,4 @@
-import { Number } from '../types';
+import { Number } from '../../types';
 import utils from './utils';
 
 const NUMBERS: Number[] = [

@@ -1,5 +1,5 @@
 import { last } from 'ramda';
-import { Timer, Clock, AnimationType, Line, Number } from '../types';
+import { Timer, Clock, AnimationType, Line, Number } from '../../types';
 import { getRandomBoolean } from '../utils';
 import { getTimers, getTimeTimer } from './timers';
 

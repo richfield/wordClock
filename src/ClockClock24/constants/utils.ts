@@ -1,3 +1,26 @@
+// eslint-disable-next-line import/no-anonymous-default-export
+type Direction = {
+  hours: number,
+  minutes: number,
+};
+
+type DirectionMap = {
+  DEACTIVATE_TOP_RIGHT: Direction,
+  DEACTIVATE_BOTTOM_RIGHT: Direction,
+  DEACTIVATE_BOTTOM_LEFT: Direction,
+  DEACTIVATE_TOP_LEFT: Direction,
+  VERTICAL_LINE: Direction,
+  HORIZONTAL_LINE: Direction,
+  OBLIQUE_LINE: Direction,
+  TOP: Direction,
+  RIGHT: Direction,
+  BOTTOM: Direction,
+  LEFT: Direction,
+  ANGLE_TOP_LEFT: Direction,
+  ANGLE_TOP_RIGHT: Direction,
+  ANGLE_BOTTOM_LEFT: Direction,
+  ANGLE_BOTTOM_RIGHT: Direction,
+};
 export default {
   DEACTIVATE_TOP_RIGHT: { hours: 45, minutes: 45 },
   DEACTIVATE_BOTTOM_RIGHT: { hours: 135, minutes: 135 },
@@ -14,4 +37,4 @@ export default {
   ANGLE_TOP_RIGHT: { hours: 90, minutes: 360 },
   ANGLE_BOTTOM_LEFT: { hours: 270, minutes: 180 },
   ANGLE_BOTTOM_RIGHT: { hours: 180, minutes: 90 },
-};
+} as DirectionMap;

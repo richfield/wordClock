@@ -1,6 +1,5 @@
 import React from 'react';
-import { ClockSettings } from '../../../types';
-import { Number as NumberT } from '../../types';
+import { ClockSettings, Number as NumberT } from '../../../types';
 
 import { NumberLines } from './NumberLines';
 const clockclock24Number = {
