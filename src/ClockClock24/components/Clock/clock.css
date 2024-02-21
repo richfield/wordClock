@@ -1,0 +1,15 @@
+.clock {
+  position: relative;
+  border-radius: 50%;
+  background-color: var(--clock-backgound-color);
+  box-shadow: inset -5px 3px 20px 2px rgba(10, 11, 10, 0.6);
+  transform: rotate(180deg);
+}
+.clock_needle {
+  position: absolute;
+}
+.clock_needleRotate {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+}

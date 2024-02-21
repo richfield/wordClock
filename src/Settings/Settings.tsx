@@ -345,6 +345,12 @@ const SettingsComponent = () => {
                                                     <ClockSettings path='TimerSettings' />
                                                 </Accordion.Body>
                                             </Accordion.Item>
+                                            <Accordion.Item eventKey="4">
+                                                <Accordion.Header>Instellingen ClockClock24</Accordion.Header>
+                                                <Accordion.Body>
+                                                    <ClockSettings path='ClockClock24' />
+                                                </Accordion.Body>
+                                            </Accordion.Item>
                                         </Accordion>
                                         <Form.Group
                                             as={Row}

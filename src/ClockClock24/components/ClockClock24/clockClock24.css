@@ -1,0 +1,41 @@
+.clockclock24_instruction {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  font-size: 11px;
+  text-align: center;
+  color: var(--clock-backgound-color);
+  font-family: var(--font-family);
+}
+.clockclock24 {
+  display: flex;
+  padding: var(--clock-padding);
+  background-color: var(--clock-backgound-color);
+  background-image: radial-gradient(
+    ellipse,
+    #232323 0%,
+    var(--clock-backgound-color) 60%
+  );
+  box-shadow: -30px -3px 21px 10px rgba(0, 0, 0, 0.15);
+}
+.clockclock24_number {
+  flex: 1;
+}
+
+.clockclock24_number_line {
+  display: flex;
+}
+.clockclock24_number_line_clock {
+  flex: 1;
+  padding: var(--clock-small-padding);
+}
+
+@media screen and (max-width: 1100px) {
+  html {
+    background-color: var(--clock-backgound-color);
+  }
+  .clockclock24 {
+    padding: var(--clock-phone-padding);
+  }
+}
