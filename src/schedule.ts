@@ -29,7 +29,10 @@ export const findActiveSchedule = (
     predicate: (item: ScheduleEntry) => boolean = () => true
 ): ScheduleEntry | undefined =>
     [ ...(schedule ?? []) ].reverse().find(item =>
-        item && item.enabled !== false && predicate(item) && isTimeInRange(now, item.fromTime, item.toTime));
+        {
+            console.log({item, isin: isTimeInRange(now, item.fromTime, item.toTime), predicate: predicate(item)});
+            return item && item.enabled !== false && predicate(item) && isTimeInRange(now, item.fromTime, item.toTime);
+        });
 
 /** Seconds until the next occurrence of `to`, which may be on the next day. */
 export const secondsUntil = (now: Date, to: string): number => {
