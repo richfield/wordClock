@@ -1,5 +1,4 @@
 import { keyBy } from 'lodash';
-import moment from 'moment';
 import React from 'react';
 import { useEffect, useState } from 'react';
 import { Container } from 'react-bootstrap';
@@ -8,6 +7,7 @@ import ClockRegistry from './ClockRegistry';
 import { defaultSettings } from './Constants';
 import Countdown from './Countdown/Countdown';
 import SettingsService from './Services/SettingsServices';
+import { findActiveSchedule, secondsUntil } from './schedule';
 import { Settings, ClockComponentProps, ClockSettings } from './types';
 import { useWakeLock } from 'react-screen-wake-lock';
 function App(): JSX.Element {
@@ -31,9 +31,9 @@ function App(): JSX.Element {
   const needsReload = time.getUTCMinutes() % 60 === 0 && time.getSeconds() === 2;
 
   const needsTimer = (settings: Settings): { isActive: boolean, timer: number } => {
-    const found = settings.Schedule.find(item => moment().isBetween(moment(item.fromTime, 'HH:mm'), moment(item.toTime, 'HH:mm')) && item.clockType === 'countdown');
+    const found = findActiveSchedule(settings.Schedule, new Date(), item => item.clockType === 'countdown');
     if (found) {
-      return ({ isActive: true, timer: moment(found.toTime, 'HH:mm').diff(moment(), 'second') });
+      return ({ isActive: true, timer: secondsUntil(new Date(), found.toTime) });
     } else {
       return ({ isActive: settings.Timer > 0, timer: settings.Timer });
     }
@@ -112,12 +112,11 @@ const Clock = (props: { settings: Settings; time: Date; }) => {
   };
 
   let Component = undefined;
-  settings.Schedule.forEach(item => {
-    if (moment().isBetween(moment(item.fromTime, 'HH:mm'), moment(item.toTime, 'HH:mm'))) {
-      componentProps.clockSettings = item.clockSettings;
-      Component = registry[ item.clockType ].Component;
-    }
-  });
+  const active = findActiveSchedule(settings.Schedule, props.time, item => item.clockType in registry);
+  if (active) {
+    componentProps.clockSettings = active.clockSettings;
+    Component = registry[ active.clockType ].Component;
+  }
   if (!Component) {
     Component = registry[ settings.DefaultClock ].Component;
   }

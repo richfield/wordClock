@@ -17,51 +17,41 @@ import {
     faClose,
 } from '@fortawesome/free-solid-svg-icons';
 import { useNavigate } from 'react-router-dom';
-import moment from 'moment';
 import { FormCheckbox, FormInput, FormSelect } from '../FormControls';
 import { ClockSettings } from '../ClockSettings/ClockSettings';
 import { faGear } from '@fortawesome/free-solid-svg-icons';
 import { get } from 'lodash';
 import { TimerSettings } from './TimerSettings';
+import { validateSchedule } from '../schedule';
+import { getErrorMessage } from '../helpers';
 
 const validate = (values: Settings) => {
-    const errors: any = {};
+    const errors: Record<string, unknown> = {};
     if (!values.DefaultClock) {
         errors[ 'DefaultClock' ] = 'Verplicht';
     }
     if (!values.RefreshRate || values.RefreshRate < 10) {
         errors[ 'RefreshRate' ] = 'Minimaal 10 seconden';
     }
-    errors.Schedule = [];
-    values.Schedule?.forEach((item, index) => {
-        const error: any = {};
-        if (!item) {
-            errors[ `Schedule[${index}]` ] = { fromTime: 'Verplicht' };
-            return;
-        }
-        if (!moment(item.fromTime, 'HH:mm').isValid()) {
-            error[ 'fromTime' ] = 'Ongeldige tijd';
-        }
-        if (!moment(item.toTime, 'HH:mm').isValid()) {
-            error[ 'toTime' ] = 'Ongeldige tijd';
-        }
-        if (!item.clockType) {
-            error[ 'clockType' ] = 'Klok is veplicht';
-        }
-
-        if (!item.clockSettings) {
-            error[ 'clockSettings' ] = 'Instellingen zijn nog niet ingevuld';
-        }
-        errors.Schedule.push(error);
-    });
+    errors.Schedule = validateSchedule(values.Schedule);
     return errors;
 };
 
 const SettingsComponent = () => {
     const navigate = useNavigate();
     const [ settings, setSettings ] = useState<Settings>();
+    const [ saveError, setSaveError ] = useState<string>();
+    const [ saved, setSaved ] = useState(false);
     async function onSubmit(values: Settings, form: any) {
-        await SettingsService.updateSettings(values);
+        setSaveError(undefined);
+        setSaved(false);
+        try {
+            await SettingsService.updateSettings(values);
+        } catch (error) {
+            setSaveError(getErrorMessage(error));
+            return;
+        }
+        setSaved(true);
 
         setSettings({
             ...values,
@@ -169,6 +159,7 @@ const SettingsComponent = () => {
                             },
                             pristine,
                             hasValidationErrors,
+                            submitting,
                             form
                         }) => {
                             return (
@@ -372,10 +363,18 @@ const SettingsComponent = () => {
                                                         Kan niet opslaan, foute invoer
                                                     </Alert>
                                                 )}
+                                                {saveError && (
+                                                    <Alert variant='danger'>
+                                                        Opslaan mislukt: {saveError}
+                                                    </Alert>
+                                                )}
+                                                {saved && pristine && !saveError && (
+                                                    <Alert variant='success'>Opgeslagen</Alert>
+                                                )}
                                             </Col>
                                             <Col sm={1}>
                                                 <Button
-                                                    disabled={pristine || hasValidationErrors}
+                                                    disabled={pristine || hasValidationErrors || submitting}
                                                     type='submit'
                                                     variant='primary'
                                                 >

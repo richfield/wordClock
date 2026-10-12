@@ -80,5 +80,6 @@ export {
     DbError,
     Settings,
     ClockComponentProps,
-    ClockSettings
+    ClockSettings,
+    ScheduleEntry
 };
