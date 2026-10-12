@@ -19,6 +19,7 @@ export const isTimeInRange = (now: Date, from: string, to: string): boolean => {
         return false;
     }
     const current = now.getHours() * 60 + now.getMinutes();
+    console.log('current:', current, 'start:', start, 'end:', end);
     return start < end ? current >= start && current < end : current >= start || current < end;
 };
 
@@ -30,7 +31,6 @@ export const findActiveSchedule = (
 ): ScheduleEntry | undefined =>
     [ ...(schedule ?? []) ].reverse().find(item =>
         {
-            console.log({ item, isin: isTimeInRange(now, item.fromTime, item.toTime), predicate: predicate(item) });
             return item && item.enabled !== false && predicate(item) && isTimeInRange(now, item.fromTime, item.toTime);
         });
 
