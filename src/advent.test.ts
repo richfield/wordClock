@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { adventSundays, daysUntilChristmas, isChristmas, litCandles } from './advent';
+import { adventSundays, daysUntilChristmas, isAdventSeason, isChristmas, litCandles } from './advent';
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 const asDate = (dayNumber: number) => new Date(dayNumber * MS_PER_DAY + 12 * 60 * 60 * 1000);
@@ -64,6 +64,16 @@ describe('daysUntilChristmas', () => {
     it('is not thrown off by the clock change in autumn or spring', () => {
         expect(daysUntilChristmas(new Date(2026, 9, 25))).toBe(61);
         expect(daysUntilChristmas(new Date(2026, 2, 29))).toBe(271);
+    });
+});
+
+describe('isAdventSeason', () => {
+    it('runs from the first Advent Sunday until 26 December', () => {
+        expect(isAdventSeason(new Date(2026, 10, 28))).toBe(false);
+        expect(isAdventSeason(new Date(2026, 10, 29))).toBe(true);
+        expect(isAdventSeason(new Date(2026, 11, 26, 23, 59))).toBe(true);
+        expect(isAdventSeason(new Date(2026, 11, 27))).toBe(false);
+        expect(isAdventSeason(new Date(2026, 5, 1))).toBe(false);
     });
 });
 

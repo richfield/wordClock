@@ -13,5 +13,6 @@ export const defaultSettings: Settings = {
     Timer: 0,
     FlipClockDefaultSettings: { backgroundColor: '#242424', foreGroundColor: '#FFFFFF', shadeColor: '#292929', topDistance: '1vmin', sizeFactor: 90 },
     ClockClock24DefaultSettings: { backgroundColor: '#000000', foreGroundColor: '#FFFFFF', shadeColor: '#242424', topDistance: '30vmin',     sizeFactor: 100 },
-        AdventClockDefaultSettings: { backgroundColor: '#101010', foreGroundColor: '#FFB84D', shadeColor: '#8B1A1A', topDistance: '5vmin', sizeFactor: 60 }
+        AdventClockDefaultSettings: { backgroundColor: '#101010', foreGroundColor: '#FFB84D', shadeColor: '#8B1A1A', topDistance: '5vmin',         sizeFactor: 60 },
+            AdventAutomatic: false
     };

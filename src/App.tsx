@@ -8,6 +8,7 @@ import { defaultSettings } from './Constants';
 import Countdown from './Countdown/Countdown';
 import SettingsService from './Services/SettingsServices';
 import { findActiveSchedule, secondsUntil } from './schedule';
+import { isAdventSeason } from './advent';
 import { Settings, ClockComponentProps, ClockSettings } from './types';
 import { useWakeLock } from 'react-screen-wake-lock';
 function App(): JSX.Element {
@@ -109,9 +110,10 @@ function App(): JSX.Element {
 const Clock = (props: { settings: Settings; time: Date; }) => {
   const { settings } = props;
   const registry = keyBy(ClockRegistry, 'id');
+  const defaultClock = settings.AdventAutomatic && isAdventSeason(props.time) ? 'advent' : settings.DefaultClock;
   let componentProps: ClockComponentProps = {
     ...props,
-    clockSettings: getClockSettings(settings, settings.DefaultClock)
+    clockSettings: getClockSettings(settings, defaultClock)
   };
 
   let Component = undefined;
@@ -121,7 +123,7 @@ const Clock = (props: { settings: Settings; time: Date; }) => {
     Component = registry[ active.clockType ].Component;
   }
   if (!Component) {
-    Component = registry[ settings.DefaultClock ]?.Component ?? registry.wordclock.Component;
+    Component = registry[ defaultClock ]?.Component ?? registry.wordclock.Component;
   }
   return React.createElement(Component, componentProps);
 };

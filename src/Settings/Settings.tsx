@@ -305,6 +305,22 @@ const SettingsComponent = () => {
                                             as={Row}
                                             className='mb-3'
                                         >
+                                            <Form.Label column>Adventskrans in de adventstijd</Form.Label>
+                                            <Col>
+                                                <Field
+                                                    name='AdventAutomatic'
+                                                    type='checkbox'
+                                                    component={FormCheckbox}
+                                                />
+                                                <Form.Text muted>
+                                                    Vervangt de standaardklok van de eerste advent t/m 26 december. Het schema gaat nog voor.
+                                                </Form.Text>
+                                            </Col>
+                                        </Form.Group>
+                                        <Form.Group
+                                            as={Row}
+                                            className='mb-3'
+                                        >
                                             <Form.Label column>
                                                 Instellingen vernieuwen (s)
                                             </Form.Label>

@@ -35,3 +35,13 @@ export const daysUntilChristmas = (date: Date): number => {
 
 export const isChristmas = (date: Date): boolean =>
     date.getMonth() === 11 && (date.getDate() === 25 || date.getDate() === 26);
+
+/**
+ * From the first Advent Sunday up to and including 26 December.
+ */
+export const isAdventSeason = (date: Date): boolean => {
+    if (litCandles(date) === 0) {
+        return false;
+    }
+    return date.getMonth() === 10 || (date.getMonth() === 11 && date.getDate() <= 26);
+};

@@ -40,6 +40,7 @@ interface Settings {
     FlipClockDefaultSettings: ClockSettings,
     ClockClock24DefaultSettings: ClockSettings,
     AdventClockDefaultSettings: ClockSettings,
+    AdventAutomatic: boolean,
     Timer: number
 
 }
