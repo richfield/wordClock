@@ -151,17 +151,8 @@ const SettingsComponent = () => {
         document.body.style.backgroundColor = '#333';
     }, []);
     return (
-        <Container
-            style={{
-                textAlign: 'left',
-                position: 'absolute',
-                backgroundColor: 'white',
-                top: '50px',
-                left: '1vw',
-                right: '1vw',
-                padding: '2vw',
-            }}
-        >
+        <Container className='pb-4' style={{ textAlign: 'left', maxWidth: '960px', paddingTop: '70px' }}>
+            <h4 className='text-white mb-3'>Instellingen</h4>
             <Row>
                 <Col>
                     <FinalForm
@@ -184,41 +175,32 @@ const SettingsComponent = () => {
                             return (
                                 <form onSubmit={handleSubmit}>
                                     <>
-                                        <Form.Group
-                                            as={Row}
-                                            className='mb-3'
-                                        >
-                                            <Col xs={3}>
-                                                <Row>
-                                                    <Row>
-                                                        <Form.Label column m={1}>
-                                                            Schema's
-                                                        </Form.Label>
-
-                                                    </Row>
-                                                    <Row>
-                                                        <Col m={1}>
-                                                            <Button
-                                                                size='sm'
-                                                                onClick={() => push('Schedule', undefined)}
-                                                                style={{ cursor: 'pointer' }}
-                                                            >
-                                                                <FontAwesomeIcon icon={faCalendarPlus} /> Toevoegen
-                                                            </Button>
-                                                        </Col>
-
-                                                    </Row>
-                                                </Row>
-                                            </Col>
-                                            <Col>
+                                        <Card className='mb-3'>
+                                            <Card.Header className='d-flex justify-content-between align-items-center'>
+                                                <strong>Schema's</strong>
+                                                <Button
+                                                    size='sm'
+                                                    onClick={() => push('Schedule', undefined)}
+                                                    style={{ cursor: 'pointer' }}
+                                                >
+                                                    <FontAwesomeIcon icon={faCalendarPlus} /> Toevoegen
+                                                </Button>
+                                            </Card.Header>
+                                            <Card.Body className='p-2'>
                                                 <FieldArray name='Schedule'>
-                                                    {({ fields }) =>
-                                                        fields.map((name, index) => (
-                                                            <Card key={index}>
+                                                    {({ fields }) => (<>
+                                                        {!fields.length && (
+                                                            <p className='text-muted text-center my-3'>
+                                                                Geen schema's. De standaard klok wordt altijd getoond.
+                                                            </p>
+                                                        )}
+                                                        {fields.map((name, index) => (
+                                                            <Card key={index} className='mb-2'>
                                                                 <Card.Body>
-                                                                    <Row>
+                                                                    <Row className='g-2'>
 
-                                                                        <Col sm={3}>
+                                                                        <Col sm={4}>
+                                                                            <Form.Label className='small text-muted mb-1'>Klok</Form.Label>
                                                                             <Field
                                                                                 name={`${name}.clockType`}
                                                                                 component={ClockTypeSelect}
@@ -229,14 +211,16 @@ const SettingsComponent = () => {
                                                                                 }))}
                                                                             />
                                                                         </Col>
-                                                                        <Col sm={3}>
+                                                                        <Col sm={4}>
+                                                                            <Form.Label className='small text-muted mb-1'>Van</Form.Label>
                                                                             <Field
                                                                                 name={`${name}.fromTime`}
                                                                                 component={FormInput}
                                                                                 type='time'
                                                                             />
                                                                         </Col>
-                                                                        <Col sm={3}>
+                                                                        <Col sm={4}>
+                                                                            <Form.Label className='small text-muted mb-1'>Tot</Form.Label>
                                                                             <Field
                                                                                 name={`${name}.toTime`}
                                                                                 component={FormInput}
@@ -245,7 +229,7 @@ const SettingsComponent = () => {
                                                                         </Col>
                                                                     </Row>
                                                                 </Card.Body>
-                                                                <Card.Footer style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                                <Card.Footer className='d-flex justify-content-between align-items-center'>
                                                                     <Field name={`${name}.clockSettings`}>
                                                                         {({ input, meta }) => (
                                                                             <>
@@ -257,9 +241,10 @@ const SettingsComponent = () => {
                                                                                 >
                                                                                     <FontAwesomeIcon icon={faGear} /> Instellingen
                                                                                 </Button>
-                                                                                {meta.error && <span>{meta.error}</span>}
+                                                                                {meta.error && <span className='text-danger small'>{meta.error}</span>}
                                                                                 <Button
                                                                                     size='sm'
+                                                                                    variant='outline-danger'
                                                                                     onClick={() => fields.remove(index)}
                                                                                     style={{ cursor: 'pointer' }}
                                                                                 >
@@ -285,11 +270,14 @@ const SettingsComponent = () => {
                                                                     </Modal>
                                                                 </Card.Footer>
                                                             </Card>
-                                                        ))
-                                                    }
+                                                        ))}
+                                                    </>)}
                                                 </FieldArray>
-                                            </Col>
-                                        </Form.Group>
+                                            </Card.Body>
+                                        </Card>
+                                        <Card className='mb-3'>
+                                            <Card.Header><strong>Algemeen</strong></Card.Header>
+                                            <Card.Body>
                                         <Form.Group
                                             as={Row}
                                             className='mb-3'
@@ -334,7 +322,11 @@ const SettingsComponent = () => {
                                                 />
                                             </Col>
                                         </Form.Group>
-                                        <Accordion defaultActiveKey={[]} alwaysOpen>
+                                            </Card.Body>
+                                        </Card>
+                                        <Card className='mb-3'>
+                                        <Card.Header><strong>Klokinstellingen</strong></Card.Header>
+                                        <Accordion defaultActiveKey={[]} alwaysOpen flush>
                                             <Accordion.Item eventKey="0">
                                                 <Accordion.Header>Standaard instellingen Woordklok</Accordion.Header>
                                                 <Accordion.Body>
@@ -366,42 +358,40 @@ const SettingsComponent = () => {
                                                 </Accordion.Body>
                                             </Accordion.Item>
                                         </Accordion>
-                                        <Form.Group
-                                            as={Row}
-                                            className='mb-3'
-                                        >
-                                            <Form.Label column sm={1}>Timer</Form.Label>
-                                            <Col>
+                                        </Card>
+                                        <Card className='mb-3'>
+                                            <Card.Header><strong>Timer</strong></Card.Header>
+                                            <Card.Body>
                                                 <TimerSettings path='Timer' />
-                                            </Col>
-                                        </Form.Group>
-                                        <Row>
-                                            <Col>
-                                                {' '}
+                                            </Card.Body>
+                                        </Card>
+                                        <div
+                                            className='bg-white border-top py-2 px-3 d-flex align-items-center justify-content-between gap-3'
+                                            style={{ position: 'sticky', bottom: 0, zIndex: 10 }}
+                                        >
+                                            <div className='flex-grow-1'>
                                                 {hasValidationErrors && (
-                                                    <Alert variant='danger'>
+                                                    <Alert variant='danger' className='mb-0 py-1'>
                                                         Kan niet opslaan, foute invoer
                                                     </Alert>
                                                 )}
                                                 {saveError && (
-                                                    <Alert variant='danger'>
+                                                    <Alert variant='danger' className='mb-0 py-1'>
                                                         Opslaan mislukt: {saveError}
                                                     </Alert>
                                                 )}
                                                 {saved && pristine && !saveError && (
-                                                    <Alert variant='success'>Opgeslagen</Alert>
+                                                    <Alert variant='success' className='mb-0 py-1'>Opgeslagen</Alert>
                                                 )}
-                                            </Col>
-                                            <Col sm={1}>
-                                                <Button
-                                                    disabled={pristine || hasValidationErrors || submitting}
-                                                    type='submit'
-                                                    variant='primary'
-                                                >
-                                                    Opslaan
-                                                </Button>
-                                            </Col>
-                                        </Row>
+                                            </div>
+                                            <Button
+                                                disabled={pristine || hasValidationErrors || submitting}
+                                                type='submit'
+                                                variant='primary'
+                                            >
+                                                {submitting ? 'Opslaan…' : 'Opslaan'}
+                                            </Button>
+                                        </div>
                                     </>
                                 </form>
                             );
