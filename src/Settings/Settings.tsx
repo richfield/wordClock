@@ -118,6 +118,9 @@ const SettingsComponent = () => {
             case 'clockClock24':
                 change(`${path}.clockSettings`, clockClock24);
                 break;
+            case 'advent':
+                change(`${path}.clockSettings`, values['AdventClockDefaultSettings']);
+                break;
             default:
                 break;
         }
@@ -359,6 +362,12 @@ const SettingsComponent = () => {
                                                 <Accordion.Header>Instellingen ClockClock24</Accordion.Header>
                                                 <Accordion.Body>
                                                     <ClockSettings path='ClockClock24DefaultSettings' />
+                                                </Accordion.Body>
+                                            </Accordion.Item>
+                                            <Accordion.Item eventKey="5">
+                                                <Accordion.Header>Instellingen Adventskrans</Accordion.Header>
+                                                <Accordion.Body>
+                                                    <ClockSettings path='AdventClockDefaultSettings' />
                                                 </Accordion.Body>
                                             </Accordion.Item>
                                         </Accordion>

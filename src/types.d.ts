@@ -39,6 +39,7 @@ interface Settings {
     TimerSettings: ClockSettings,
     FlipClockDefaultSettings: ClockSettings,
     ClockClock24DefaultSettings: ClockSettings,
+    AdventClockDefaultSettings: ClockSettings,
     Timer: number
 
 }

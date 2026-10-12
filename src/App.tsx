@@ -136,6 +136,8 @@ const getClockSettings = (settings: Settings, clockType: string): ClockSettings 
       return settings.FlipClockDefaultSettings;
     case 'clockClock24':
       return settings.ClockClock24DefaultSettings;
+    case 'advent':
+      return settings.AdventClockDefaultSettings;
     case 'wordclock':
     default:
       return settings.WordClockDefaultSettings;

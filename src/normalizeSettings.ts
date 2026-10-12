@@ -6,7 +6,8 @@ const clockSettingsKeys: Record<string, keyof Settings> = {
     digital: 'DigitalClockDefaultSettings',
     countdown: 'TimerSettings',
     flipclock: 'FlipClockDefaultSettings',
-    clockClock24: 'ClockClock24DefaultSettings'
+    clockClock24: 'ClockClock24DefaultSettings',
+    advent: 'AdventClockDefaultSettings'
 };
 
 const isObject = (value: unknown): value is Record<string, unknown> =>

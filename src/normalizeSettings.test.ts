@@ -22,6 +22,11 @@ describe('normalizeSettings', () => {
         expect(result.TimerSettings).toEqual({ ...defaultSettings.TimerSettings, backgroundColor: '#111111' });
     });
 
+    it('adds the Advent settings for users who saved settings before the Advent clock existed', () => {
+        const result = normalizeSettings({ DefaultClock: 'advent', RefreshRate: 30 });
+        expect(result.AdventClockDefaultSettings).toEqual(defaultSettings.AdventClockDefaultSettings);
+    });
+
     it('ignores clock settings that are not objects', () => {
         const result = normalizeSettings({ DigitalClockDefaultSettings: 'broken' });
         expect(result.DigitalClockDefaultSettings).toEqual(defaultSettings.DigitalClockDefaultSettings);
