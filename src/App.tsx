@@ -54,6 +54,7 @@ function App(): JSX.Element {
         } else {
           return setTimerIsActive({ isActive: false });
         }
+      // eslint-disable-next-line no-console
       }).catch(error => console.error('Failed to refresh settings', error));
     }
   }, [ needsRefresh, timerIsActive.isActive ]);
@@ -63,6 +64,7 @@ function App(): JSX.Element {
       try {
         setSettings(await SettingsService.getSettings());
       } catch (error) {
+        // eslint-disable-next-line no-console
         console.error('Failed to load settings', error);
       }
     };
@@ -72,6 +74,7 @@ function App(): JSX.Element {
   useEffect(() => {
     if (ForceReload && !timerIsActive.isActive) {
       SettingsService.patchSettings({ ForceReload: false })
+        // eslint-disable-next-line no-console
         .catch(error => console.error('Failed to reset ForceReload', error))
         .finally(() => document.location.reload());
     }
