@@ -3,7 +3,8 @@ import { ClockSettings, Number as NumberT } from '../../../types';
 
 import { NumberLines } from './NumberLines';
 const clockclock24Number = {
-  flex: '1'
+  flex: '1',
+  margin: '0 0.6vmin'
 };
 
 /**

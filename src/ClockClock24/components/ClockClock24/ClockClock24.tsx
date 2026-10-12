@@ -161,8 +161,7 @@ export default class ClockClock24 extends Component<
     display: 'flex',
     padding: 'var(--clock-padding)',
     backgroundColor: this.props.clockSettings.backgroundColor,
-    backgroundImage: `radial-gradient(ellipse, ${this.props.clockSettings.foreGroundColor} 0%, ${this.props.clockSettings.backgroundColor} 60%)`,
-    boxShadow: '-30px -3px 21px 10px rgba(0, 0, 0, 0.15)'
+    boxShadow: '0 20px 40px rgba(0, 0, 0, 0.45)'
   };
 
   render() {

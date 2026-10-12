@@ -131,6 +131,8 @@ const getClockSettings = (settings: Settings): ClockSettings => {
       return settings.TimerSettings;
     case 'flipclock':
       return settings.FlipClockDefaultSettings;
+    case 'clockClock24':
+      return settings.ClockClock24DefaultSettings;
     case 'wordClock':
     default:
       return settings.WordClockDefaultSettings;
