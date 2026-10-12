@@ -1,6 +1,6 @@
 import { keyBy } from 'lodash';
 import moment from 'moment';
-import React, { useCallback } from 'react';
+import React from 'react';
 import { useEffect, useState } from 'react';
 import { Container } from 'react-bootstrap';
 import './App.scss';
@@ -15,11 +15,11 @@ function App(): JSX.Element {
   const [ time, setTime ] = useState(new Date());
   const [ timerIsActive, setTimerIsActive ] = useState<{ isActive: boolean, remaining?: number }>({ isActive: false });
 
-  const updateTime = useCallback(() => {
-    setTime(new Date());
+  useEffect(() => {
+    const id = setInterval(() => setTime(new Date()), 1000);
+    return () => clearInterval(id);
   }, []);
 
-  setTimeout(updateTime, 1000);
   const { request } = useWakeLock();
   useEffect(() => {
     // Use this to lock the screen when the component mounts
@@ -27,7 +27,7 @@ function App(): JSX.Element {
   }, [ request ]);
 
   const { ForceReload, RefreshRate } = settings;
-  const needsRefresh = time.getUTCSeconds() % RefreshRate === 0;
+  const needsRefresh = RefreshRate > 0 && time.getUTCSeconds() % RefreshRate === 0;
   const needsReload = time.getUTCMinutes() % 60 === 0 && time.getSeconds() === 2;
 
   const needsTimer = (settings: Settings): { isActive: boolean, timer: number } => {
@@ -54,30 +54,34 @@ function App(): JSX.Element {
         } else {
           return setTimerIsActive({ isActive: false });
         }
-      });
+      }).catch(error => console.error('Failed to refresh settings', error));
     }
   }, [ needsRefresh, timerIsActive.isActive ]);
 
   useEffect(() => {
     const fetchData = async () => {
-      const newSettings = await SettingsService.getSettings();
-      setSettings(newSettings);
+      try {
+        setSettings(await SettingsService.getSettings());
+      } catch (error) {
+        console.error('Failed to load settings', error);
+      }
     };
     fetchData();
   }, []);
 
   useEffect(() => {
-    if (ForceReload && !timerIsActive) {
-      SettingsService.updateSettings({ ...settings, ForceReload: false });
-      document.location.reload();
+    if (ForceReload && !timerIsActive.isActive) {
+      SettingsService.updateSettings({ ...settings, ForceReload: false })
+        .catch(error => console.error('Failed to reset ForceReload', error))
+        .finally(() => document.location.reload());
     }
-  }, [ ForceReload, settings, timerIsActive ]);
+  }, [ ForceReload, settings, timerIsActive.isActive ]);
 
   useEffect(() => {
-    if (needsReload && !timerIsActive) {
+    if (needsReload && !timerIsActive.isActive) {
       document.location.reload();
     }
-  }, [ needsReload, timerIsActive ]);
+  }, [ needsReload, timerIsActive.isActive ]);
 
   const goToSettings = () => {
     document.location.href = `${document.location.href}settings`;
