@@ -5,6 +5,11 @@
   70% { transform: scale(0.96, 1.04) rotate(1.5deg); opacity: 0.9; }
 }
 
+.advent-text {
+  font-family: 'Mountains of Christmas', 'Brush Script MT', cursive;
+  font-weight: 700;
+}
+
 .advent-flame {
   transform-box: fill-box;
   transform-origin: 50% 100%;

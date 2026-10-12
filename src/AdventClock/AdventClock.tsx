@@ -1,31 +1,31 @@
 import { useEffect } from 'react';
 import { Container } from 'react-bootstrap';
+import '@fontsource/mountains-of-christmas/latin-700.css';
 import { ClockComponentProps } from '../types';
 import { daysUntilChristmas, isChristmas, litCandles } from '../advent';
 import './AdventClock.css';
 
-const WREATH = { cx: 200, cy: 215, rx: 175, ry: 42 };
-const CANDLE_X = [ 90, 163, 237, 310 ];
-const CANDLE_WIDTH = 30;
-const CANDLE_HEIGHT = 105;
+const CENTER = { x: 200, y: 255 };
+const RADIUS = 125;
+const CANDLE_ANGLES = [ 155, 118, 62, 25 ];
+const CANDLE_WIDTH = 26;
+const CANDLE_HEIGHT = 92;
+const BERRY_ANGLES = [ 0, 40, 85, 140, 180, 215, 250, 290, 330 ];
 
 const pad = (value: number) => String(value).padStart(2, '0');
 
-const daysText = (time: Date): string => {
+const pointOnRing = (angle: number, radius = RADIUS) => ({
+    x: CENTER.x + radius * Math.cos(angle * Math.PI / 180),
+    y: CENTER.y - radius * Math.sin(angle * Math.PI / 180)
+});
+
+const messageLines = (time: Date): string[] => {
     if (isChristmas(time)) {
-        return 'Fijne kerst!';
+        return [ 'Fijne kerst!' ];
     }
     const days = daysUntilChristmas(time);
-    return days === 1 ? 'Nog 1 dag tot kerst' : `Nog ${days} dagen tot kerst`;
+    return [ days === 1 ? 'nog 1 dag' : `nog ${days} dagen`, 'tot kerst' ];
 };
-
-// The candle foot sits on the back half of the wreath so the greenery overlaps it
-const candleBase = (x: number): number => {
-    const dx = (x - WREATH.cx) / WREATH.rx;
-    return WREATH.cy - WREATH.ry * Math.sqrt(Math.max(0, 1 - dx * dx)) + 14;
-};
-
-const BERRIES = [ [ 60, 232 ], [ 120, 250 ], [ 200, 257 ], [ 285, 250 ], [ 340, 232 ], [ 140, 178 ], [ 262, 178 ] ];
 
 const AdventClock = (props: ClockComponentProps): JSX.Element => {
     const { time, clockSettings } = props;
@@ -37,33 +37,41 @@ const AdventClock = (props: ClockComponentProps): JSX.Element => {
     }, [ backgroundColor ]);
 
     const clock = `${pad(time.getHours())}:${pad(time.getMinutes())}${showSeconds ? `:${pad(time.getSeconds())}` : ''}`;
+    const lines = messageLines(time);
 
     return (
-        <Container fluid style={{ paddingTop: topDistance, textAlign: 'center', color: foreGroundColor }}>
+        <Container fluid style={{ paddingTop: topDistance, textAlign: 'center' }}>
             <svg
-                viewBox='0 0 400 290'
+                viewBox='0 0 400 400'
                 role='img'
                 aria-label={`Adventskrans met ${lit} brandende kaarsen`}
                 style={{ width: `${sizeFactor}vmin`, maxWidth: '100%', height: 'auto' }}
             >
                 <defs>
                     <radialGradient id='advent-glow'>
-                        <stop offset='0%' stopColor={foreGroundColor} stopOpacity='0.55' />
+                        <stop offset='0%' stopColor={foreGroundColor} stopOpacity='0.5' />
                         <stop offset='100%' stopColor={foreGroundColor} stopOpacity='0' />
                     </radialGradient>
                 </defs>
-                <ellipse cx={WREATH.cx} cy={WREATH.cy} rx={WREATH.rx} ry={WREATH.ry} fill='none' stroke='#1f5a2b' strokeWidth='34' />
-                <ellipse cx={WREATH.cx} cy={WREATH.cy} rx={WREATH.rx} ry={WREATH.ry} fill='none' stroke='#2f7d3c' strokeWidth='22' strokeDasharray='14 6' />
-                {BERRIES.map(([ x, y ]) => <circle key={`${x}-${y}`} cx={x} cy={y} r='5' fill='#b3202a' />)}
-                {CANDLE_X.map((x, index) => {
-                    const base = candleBase(x);
-                    const top = base - CANDLE_HEIGHT;
+                <circle cx={CENTER.x} cy={CENTER.y} r={RADIUS} fill='none' stroke='#1b4d26' strokeWidth='36' />
+                <circle cx={CENTER.x} cy={CENTER.y} r={RADIUS} fill='none' stroke='#2f7d3c' strokeWidth='26' strokeDasharray='16 5' />
+                <circle cx={CENTER.x} cy={CENTER.y} r={RADIUS} fill='none' stroke='#46a057' strokeWidth='12' strokeDasharray='6 14' />
+                {BERRY_ANGLES.map(angle => {
+                    const { x, y } = pointOnRing(angle, RADIUS + 4);
+                    return <circle key={angle} cx={x} cy={y} r='5' fill='#c02731' />;
+                })}
+                {CANDLE_ANGLES.map((angle, index) => {
+                    const base = pointOnRing(angle);
+                    const x = base.x;
+                    const bottom = base.y + 6;
+                    const top = bottom - CANDLE_HEIGHT;
                     const burning = index < lit;
                     return (
-                        <g key={x}>
-                            {burning && <circle cx={x} cy={top - 18} r='46' fill='url(#advent-glow)' />}
+                        <g key={angle}>
+                            {burning && <circle cx={x} cy={top - 16} r='44' fill='url(#advent-glow)' />}
                             <rect x={x - CANDLE_WIDTH / 2} y={top} width={CANDLE_WIDTH} height={CANDLE_HEIGHT} rx='3' fill={shadeColor} />
-                            <rect x={x - CANDLE_WIDTH / 2} y={top} width='7' height={CANDLE_HEIGHT} rx='3' fill='#ffffff' opacity='0.12' />
+                            <rect x={x - CANDLE_WIDTH / 2} y={top} width='6' height={CANDLE_HEIGHT} rx='3' fill='#ffffff' opacity='0.14' />
+                            <ellipse cx={x} cy={bottom} rx={CANDLE_WIDTH / 2 + 5} ry='6' fill='#2f7d3c' />
                             <line x1={x} y1={top} x2={x} y2={top - 7} stroke='#222' strokeWidth='2' />
                             {burning && (
                                 <g className={`advent-flame advent-flame-${index + 1}`} data-testid='flame'>
@@ -77,17 +85,13 @@ const AdventClock = (props: ClockComponentProps): JSX.Element => {
                         </g>
                     );
                 })}
-                <path
-                    d={`M ${WREATH.cx - WREATH.rx} ${WREATH.cy} A ${WREATH.rx} ${WREATH.ry} 0 0 0 ${WREATH.cx + WREATH.rx} ${WREATH.cy}`}
-                    fill='none' stroke='#2f7d3c' strokeWidth='34' strokeLinecap='round'
-                />
-                <path
-                    d={`M ${WREATH.cx - WREATH.rx} ${WREATH.cy} A ${WREATH.rx} ${WREATH.ry} 0 0 0 ${WREATH.cx + WREATH.rx} ${WREATH.cy}`}
-                    fill='none' stroke='#3f9a4d' strokeWidth='20' strokeDasharray='14 6'
-                />
+                <g fill={foreGroundColor} textAnchor='middle' className='advent-text'>
+                    <text x={CENTER.x} y={CENTER.y + 10} fontSize={showSeconds ? 54 : 74}>{clock}</text>
+                    {lines.map((line, index) => (
+                        <text key={line} x={CENTER.x} y={CENTER.y + 48 + index * 26} fontSize='24' opacity='0.9'>{line}</text>
+                    ))}
+                </g>
             </svg>
-            <div style={{ fontSize: `${sizeFactor / 7}vmin`, fontWeight: 'bold', lineHeight: 1.1 }}>{clock}</div>
-            <div style={{ fontSize: `${sizeFactor / 18}vmin`, opacity: 0.85 }}>{daysText(time)}</div>
         </Container>
     );
 };
