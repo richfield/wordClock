@@ -2,6 +2,7 @@ import { defaultSettings } from '../Constants';
 import { getErrorMessage } from '../helpers';
 import { Settings, User } from '../types';
 import { decodeToken } from 'react-jwt';
+import { normalizeSettings } from '../normalizeSettings';
 const fetchData = async (path: string, method: 'POST' | 'GET', body: unknown = {}): Promise<any> => {
     var response = await fetch(`${import.meta.env.VITE_API_URL}/${path}`, {
         method: method,
@@ -62,7 +63,7 @@ const getSettings = async (): Promise<Settings> => {
         const result = await fetchData('settings', 'GET');
         const parsed = typeof(result) == 'string' ? JSON.parse(result) : result;
         // Settings saved by older versions may lack newer keys
-        return { ...defaultSettings, ...parsed };
+        return normalizeSettings(parsed);
     }
     return defaultSettings;
 };
