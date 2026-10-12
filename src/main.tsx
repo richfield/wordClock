@@ -4,7 +4,6 @@ import App from './App';
 import './index.scss';
 import Login from './Login/Login';
 import Settings from './Settings/Settings';
-import { CookiesProvider } from 'react-cookie';
 import {
   createBrowserRouter,
   RouterProvider } from 'react-router-dom';
@@ -29,7 +28,6 @@ const router = createBrowserRouter( routes );
 
 ReactDOM.createRoot( document.getElementById( 'root' ) as HTMLElement ).render(
   <React.StrictMode >
-  <CookiesProvider>
     {document.location.pathname !== '/' &&
       <Navbar fixed="top" bg="dark" variant="dark">
         <Container>
@@ -42,6 +40,5 @@ ReactDOM.createRoot( document.getElementById( 'root' ) as HTMLElement ).render(
       </Navbar>
     }
     <RouterProvider router={router} />
-  </CookiesProvider>
   </React.StrictMode >
 );

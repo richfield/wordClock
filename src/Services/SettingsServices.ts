@@ -1,7 +1,7 @@
 import { defaultSettings } from '../Constants';
 import { getErrorMessage } from '../helpers';
 import { Settings, User } from '../types';
-import jwtDecode, { JwtPayload } from 'jwt-decode';
+import { decodeToken } from 'react-jwt';
 const fetchData = async (path: string, method: 'POST' | 'GET', body: unknown = {}): Promise<any> => {
     var response = await fetch(`${import.meta.env.VITE_API_URL}/${path}`, {
         method: method,
@@ -45,17 +45,10 @@ const register = async (Username: string, Password: string): Promise<{ success: 
 };
 
 const getSettings = async (): Promise<Settings> => {
-    try {
-        const decodedToken = jwtDecode<JwtPayload>(localStorage.getItem('token') || '');
-        if (decodedToken.exp && (decodedToken.exp * 1000) > new Date().getTime()) {
-            const result = await fetchData('settings', 'GET');
-            return typeof(result) == 'string' ?  JSON.parse(result) : result;
-        }
-    } catch (error) {
-        // No or malformed token: fall back to the default settings
-        if (localStorage.getItem('token')) {
-            throw error;
-        }
+    const decodedToken = decodeToken<{ exp?: number }>(localStorage.getItem('token') || '');
+    if (decodedToken?.exp && (decodedToken.exp * 1000) > new Date().getTime()) {
+        const result = await fetchData('settings', 'GET');
+        return typeof(result) == 'string' ?  JSON.parse(result) : result;
     }
     return defaultSettings;
 };
