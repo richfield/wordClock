@@ -1,38 +1,76 @@
 import { Alert, Button, Card, Col, Container, Form, Row } from 'react-bootstrap';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import SettingsService from '../Services/SettingsServices';
 import { useJwt } from 'react-jwt';
 
 import { Form as FinalForm, Field } from 'react-final-form';
 import { FormInput } from '../FormControls';
-import { DbUser } from '../types';
 import { useNavigate } from 'react-router-dom';
+
+interface Credentials {
+    Username: string;
+    Password: string;
+}
+
+const MIN_USERNAME_LENGTH = 3;
+const MIN_PASSWORD_LENGTH = 8;
+
+const validate = (values: Partial<Credentials>) => {
+    const errors: Partial<Record<keyof Credentials, string>> = {};
+    if (!values.Username) {
+        errors.Username = 'Gebruikersnaam is verplicht';
+    }
+    if (!values.Password) {
+        errors.Password = 'Wachtwoord is verplicht';
+    }
+    return errors;
+};
 
 const Login = () => {
     const [ error, setError ] = useState<string | undefined>();
     const [ message, setMessage ] = useState<string | undefined>();
     const [ token, setToken ] = useState<string>(localStorage.getItem('token') || '');
+    const [ registering, setRegistering ] = useState(false);
     const { isExpired } = useJwt<{ username: string, exp: number }>(token);
     const navigate = useNavigate();
+
+    useEffect(() => {
+        const previous = document.body.style.backgroundColor;
+        document.body.style.backgroundColor = '#333';
+        return () => {
+            document.body.style.backgroundColor = previous;
+        };
+    }, []);
 
     const clearMessages = () => {
         setMessage(undefined);
         setError(undefined);
     };
 
-    const onSubmit = async (values: DbUser) => {
+    const onSubmit = async (values: Credentials) => {
         clearMessages();
         const result = await SettingsService.login(values.Username, values.Password);
         setToken(localStorage.getItem('token') || '');
         setError(result.error);
-        if(result.success) {
-            navigate('/Settings');
+        if (result.success) {
+            navigate('/settings');
         }
     };
 
-    const register = async (values: any) => {
+    const register = async (values: Partial<Credentials>) => {
         clearMessages();
-        const result = await SettingsService.register(values.Username, values.Password);
+        const { Username = '', Password = '' } = values;
+        if (Username.length < MIN_USERNAME_LENGTH) {
+            setError(`Gebruikersnaam moet minimaal ${MIN_USERNAME_LENGTH} tekens bevatten`);
+            return;
+        }
+        if (Password.length < MIN_PASSWORD_LENGTH) {
+            setError(`Wachtwoord moet minimaal ${MIN_PASSWORD_LENGTH} tekens bevatten`);
+            return;
+        }
+        setRegistering(true);
+        const result = await SettingsService.register(Username, Password);
+        setRegistering(false);
         if (result.success) {
             setMessage('Registreren gelukt, inloggen a.u.b.');
         } else {
@@ -47,17 +85,6 @@ const Login = () => {
         setToken('');
     };
 
-    const validate = (values: DbUser) => {
-        const errors: any = {};
-        if(!values.Username) {
-            errors['Username'] = 'Gebruikersnaam is verplicht';
-        }
-        if (!values.Password) {
-            errors[ 'Password' ] = 'Wachtwoord is verplicht';
-        }
-        return errors;
-    };
-    document.body.style.backgroundColor = '#333';
     return <Container style={{
         textAlign: 'left',
         position: 'absolute',
@@ -74,73 +101,54 @@ const Login = () => {
                 <Button variant="primary" onClick={logout}>Uitloggen</Button>
             </Card.Body>
         </Card> :
-            <FinalForm
+            <FinalForm<Credentials>
                 onSubmit={onSubmit}
                 validate={validate}
-                render={({
-                    handleSubmit,
-                    pristine,
-                    hasValidationErrors,
-                    values
-                }) => {
-                    return (
-                        <form onSubmit={handleSubmit}>
-                            <>
-                                <Form.Group
-                                    as={Row}
-                                    className='mb-3'
-                                >
-                                    <Form.Label column>Gebruikersnaam</Form.Label>
-                                    <Col>
-                                        <Field
-                                            name='Username'
-                                            type='text'
-                                            component={FormInput}
-                                        />
-                                    </Col>
-                                </Form.Group>
-                                <Form.Group
-                                    as={Row}
-                                    className='mb-3'
-                                >
-                                    <Form.Label column>Wachtwoord</Form.Label>
-                                    <Col>
-                                        <Field
-                                            name='Password'
-                                            type='password'
-                                            component={FormInput}
-                                        />
-                                    </Col>
-                                </Form.Group>
-                                <Row>
-                                    <Col>
-                                        {' '}
-                                        {hasValidationErrors && !pristine && <Alert variant='danger'>Onvolledige invoer</Alert>}
-                                        {error && <Alert variant='danger'>{error}</Alert>}
-                                        {message && <Alert variant='info'>{message}</Alert>}
-                                    </Col>
-                                    <Col sm={1}>
-                                        <Button
-                                            disabled={pristine || hasValidationErrors}
-                                            type='submit'
-                                            variant='primary'
-                                        >
-                                            Inloggen
-                                        </Button>
-                                        </Col><Col>
-                                        <Button
-                                            disabled={pristine || hasValidationErrors}
-                                            onClick={() => register(values)}
-                                            variant='secondary'
-                                        >
-                                            Registreren
-                                        </Button>
-                                    </Col>
-                                </Row>
-                            </>
-                        </form>
-                    );
-                }}
+                render={({ handleSubmit, pristine, hasValidationErrors, submitting, values }) => (
+                    <form onSubmit={handleSubmit}>
+                        <Form.Group as={Row} className='mb-3'>
+                            <Form.Label column>Gebruikersnaam</Form.Label>
+                            <Col>
+                                <Field
+                                    name='Username'
+                                    type='text'
+                                    autoComplete='username'
+                                    component={FormInput}
+                                />
+                            </Col>
+                        </Form.Group>
+                        <Form.Group as={Row} className='mb-3'>
+                            <Form.Label column>Wachtwoord</Form.Label>
+                            <Col>
+                                <Field
+                                    name='Password'
+                                    type='password'
+                                    autoComplete='current-password'
+                                    component={FormInput}
+                                />
+                            </Col>
+                        </Form.Group>
+                        {hasValidationErrors && !pristine && <Alert variant='danger'>Onvolledige invoer</Alert>}
+                        {error && <Alert variant='danger'>{error}</Alert>}
+                        {message && <Alert variant='info'>{message}</Alert>}
+                        <div className='d-flex gap-2'>
+                            <Button
+                                disabled={pristine || hasValidationErrors || submitting || registering}
+                                type='submit'
+                                variant='primary'
+                            >
+                                Inloggen
+                            </Button>
+                            <Button
+                                disabled={pristine || hasValidationErrors || submitting || registering}
+                                onClick={() => register(values)}
+                                variant='secondary'
+                            >
+                                Registreren
+                            </Button>
+                        </div>
+                    </form>
+                )}
             />
         }
     </Container>;

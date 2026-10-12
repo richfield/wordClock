@@ -19,7 +19,15 @@ const fetchData = async (path: string, method: 'POST' | 'GET', body: unknown = {
         }
         return await response.json();
     }
-    throw new Error(await response.text());
+    const text = await response.text();
+    let message = text;
+    try {
+        const parsed = JSON.parse(text);
+        message = typeof parsed === 'string' ? parsed : parsed?.error ?? text;
+    } catch {
+        // Not JSON: use the raw response text
+    }
+    throw new Error(message);
 };
 
 const login = async (Username: string, Password: string): Promise<{ success: boolean, error?: string }> => {
