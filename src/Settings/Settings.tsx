@@ -249,6 +249,17 @@ const SettingsComponent = () => {
                                                                                     <FontAwesomeIcon icon={faGear} /> Instellingen
                                                                                 </Button>
                                                                                 {meta.error && <span className='text-danger small'>{meta.error}</span>}
+                                                                                <Field name={`${name}.enabled`}>
+                                                                                    {({ input }) => (
+                                                                                        <Form.Check
+                                                                                            type='switch'
+                                                                                            id={`${name}-enabled`}
+                                                                                            label='Actief'
+                                                                                            checked={input.value !== false}
+                                                                                            onChange={(e) => input.onChange(e.target.checked)}
+                                                                                        />
+                                                                                    )}
+                                                                                </Field>
                                                                                 <Button
                                                                                     size='sm'
                                                                                     variant='outline-danger'

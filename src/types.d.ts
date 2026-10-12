@@ -26,7 +26,8 @@ interface ScheduleEntry {
     fromTime: string,
     toTime: string,
     clockType: string,
-    clockSettings: ClockSettings
+    clockSettings: ClockSettings,
+    enabled?: boolean
 }
 
 interface Settings {

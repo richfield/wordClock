@@ -22,13 +22,14 @@ export const isTimeInRange = (now: Date, from: string, to: string): boolean => {
     return start < end ? current >= start && current < end : current >= start || current < end;
 };
 
-/** The last matching entry wins, so later schedules override earlier ones. */
+/** The last matching entry wins, so later schedules override earlier ones. Disabled entries are skipped. */
 export const findActiveSchedule = (
     schedule: ScheduleEntry[] | undefined,
     now: Date,
     predicate: (item: ScheduleEntry) => boolean = () => true
 ): ScheduleEntry | undefined =>
-    [ ...(schedule ?? []) ].reverse().find(item => item && predicate(item) && isTimeInRange(now, item.fromTime, item.toTime));
+    [ ...(schedule ?? []) ].reverse().find(item =>
+        item && item.enabled !== false && predicate(item) && isTimeInRange(now, item.fromTime, item.toTime));
 
 /** Seconds until the next occurrence of `to`, which may be on the next day. */
 export const secondsUntil = (now: Date, to: string): number => {

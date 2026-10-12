@@ -56,6 +56,15 @@ describe('findActiveSchedule', () => {
         expect(findActiveSchedule([ day, night ], at('23:00'))).toBe(night);
     });
 
+    it('skips disabled entries, but treats a missing flag as enabled', () => {
+        const disabled = { ...entry('08:00', '18:00'), enabled: false };
+        const enabled = { ...entry('08:00', '18:00'), enabled: true };
+        expect(findActiveSchedule([ day, disabled ], at('23:30'))).toBeUndefined();
+        expect(findActiveSchedule([ day, disabled ], at('12:00'))).toBe(day);
+        expect(findActiveSchedule([ day, enabled ], at('12:00'))).toBe(enabled);
+        expect(findActiveSchedule([ enabled, disabled ], at('12:00'))).toBe(enabled);
+    });
+
     it('returns undefined when nothing matches or the schedule is missing', () => {
         expect(findActiveSchedule([ entry('08:00', '09:00') ], at('12:00'))).toBeUndefined();
         expect(findActiveSchedule([], at('12:00'))).toBeUndefined();
