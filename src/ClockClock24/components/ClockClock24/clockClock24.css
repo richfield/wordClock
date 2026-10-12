@@ -12,13 +12,12 @@
   display: flex;
   padding: var(--clock-padding);
   background-color: var(--clock-background-color);
-  /*background-image: radial-gradient(
+  background-image: radial-gradient(
     ellipse,
     #232323 0%,
     var(--clock-background-color) 60%
   );
-   box-shadow: -30px -3px 21px 10px rgba(0, 0, 0, 0.15); */
-  box-shadow: none;
+  box-shadow: -30px -3px 21px 10px rgba(0, 0, 0, 0.15);
 }
 .clockclock24_number {
   flex: 1;
