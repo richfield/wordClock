@@ -9,8 +9,8 @@ export const defaultSettings: Settings = {
     DefaultClock: 'digital',
     WordClockDefaultSettings: { backgroundColor: '#242424', foreGroundColor: '#FFFFFF', shadeColor: '#292929', topDistance: '1vmin', sizeFactor: 90 },
     DigitalClockDefaultSettings: { backgroundColor: '#000000', foreGroundColor: '#E61919', shadeColor: '#282828', topDistance: '25vmin', sizeFactor: 90 },
-    TimerSettings: { backgroundColor: '#000000', foreGroundColor: '#E61919', shadeColor: '#282828', topDistance: '1vmin', sizeFactor: 90 },
+    TimerSettings: { backgroundColor: '#242424', foreGroundColor: '#FF0000', shadeColor: '#000000', topDistance: '1vmin', sizeFactor: 90 },
     Timer: 0,
     FlipClockDefaultSettings: { backgroundColor: '#242424', foreGroundColor: '#FFFFFF', shadeColor: '#292929', topDistance: '1vmin', sizeFactor: 90 },
-    ClockClock24DefaultSettings: { backgroundColor: '#0d0d0d', foreGroundColor: '#F2F2F2', shadeColor: '#181818', topDistance: '30vmin', sizeFactor: 100 }
+    ClockClock24DefaultSettings: { backgroundColor: '#242424', foreGroundColor: '#FFFFFF', shadeColor: '#242424', topDistance: '30vmin', sizeFactor: 100 }
 };
