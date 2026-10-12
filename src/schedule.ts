@@ -30,7 +30,7 @@ export const findActiveSchedule = (
 ): ScheduleEntry | undefined =>
     [ ...(schedule ?? []) ].reverse().find(item =>
         {
-            console.log({item, isin: isTimeInRange(now, item.fromTime, item.toTime), predicate: predicate(item)});
+            console.log({ item, isin: isTimeInRange(now, item.fromTime, item.toTime), predicate: predicate(item) });
             return item && item.enabled !== false && predicate(item) && isTimeInRange(now, item.fromTime, item.toTime);
         });
 
