@@ -11,6 +11,7 @@ const CANDLE_ANGLES = [ 155, 118, 62, 25 ];
 const CANDLE_WIDTH = 26;
 const CANDLE_HEIGHT = 92;
 const BERRY_ANGLES = [ 0, 40, 85, 140, 180, 215, 250, 290, 330 ];
+const BELOW_RING_Y = 445;
 
 const pad = (value: number) => String(value).padStart(2, '0');
 
@@ -19,12 +20,12 @@ const pointOnRing = (angle: number, radius = RADIUS) => ({
     y: CENTER.y - radius * Math.sin(angle * Math.PI / 180)
 });
 
-const messageLines = (time: Date): string[] => {
+const messageText = (time: Date): string => {
     if (isChristmas(time)) {
-        return [ 'Fijne kerst!' ];
+        return 'Fijne kerst!';
     }
     const days = daysUntilChristmas(time);
-    return [ days === 1 ? 'nog 1 dag' : `nog ${days} dagen`, 'tot kerst' ];
+    return days === 1 ? 'nog 1 dag tot kerst' : `nog ${days} dagen tot kerst`;
 };
 
 const AdventClock = (props: ClockComponentProps): JSX.Element => {
@@ -37,12 +38,12 @@ const AdventClock = (props: ClockComponentProps): JSX.Element => {
     }, [ backgroundColor ]);
 
     const clock = `${pad(time.getHours())}:${pad(time.getMinutes())}${showSeconds ? `:${pad(time.getSeconds())}` : ''}`;
-    const lines = messageLines(time);
+    const message = messageText(time);
 
     return (
         <Container fluid style={{ paddingTop: topDistance, textAlign: 'center' }}>
             <svg
-                viewBox='0 0 400 400'
+                viewBox='0 0 400 460'
                 role='img'
                 aria-label={`Adventskrans met ${lit} brandende kaarsen`}
                 style={{ width: `${sizeFactor}vmin`, maxWidth: '100%', height: 'auto' }}
@@ -86,10 +87,8 @@ const AdventClock = (props: ClockComponentProps): JSX.Element => {
                     );
                 })}
                 <g fill={foreGroundColor} textAnchor='middle' className='advent-text'>
-                    <text x={CENTER.x} y={CENTER.y + 10} fontSize={showSeconds ? 54 : 74}>{clock}</text>
-                    {lines.map((line, index) => (
-                        <text key={line} x={CENTER.x} y={CENTER.y + 48 + index * 26} fontSize='24' opacity='0.9'>{line}</text>
-                    ))}
+                    <text x={CENTER.x} y={CENTER.y + 25} fontSize={showSeconds ? 60 : 84}>{clock}</text>
+                    <text x={CENTER.x} y={BELOW_RING_Y} fontSize='34' opacity='0.9'>{message}</text>
                 </g>
             </svg>
         </Container>
