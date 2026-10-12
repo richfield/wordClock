@@ -37,6 +37,18 @@ const validate = (values: Settings) => {
     return errors;
 };
 
+const ClockTypeSelect = (props: any) => {
+    const { onTypeChange, ...rest } = props;
+    const input = {
+        ...rest.input,
+        onChange: (event: unknown) => {
+            rest.input.onChange(event);
+            onTypeChange?.();
+        }
+    };
+    return <FormSelect {...rest} input={input} />;
+};
+
 const SettingsComponent = () => {
     const navigate = useNavigate();
     const [ settings, setSettings ] = useState<Settings>();
@@ -69,9 +81,11 @@ const SettingsComponent = () => {
         user_id: string;
     }>(localStorage.getItem('token') || '');
 
-    if (isExpired) {
-        navigate('/login');
-    }
+    useEffect(() => {
+        if (isExpired) {
+            navigate('/login');
+        }
+    }, [ isExpired, navigate ]);
 
     const [ visibleModal, setVisibleModal ] = useState<string>();
 
@@ -122,15 +136,20 @@ const SettingsComponent = () => {
 
     useEffect(() => {
         const fetchData = async () => {
-            const result = await SettingsService.getSettings();
-            setSettings(result);
+            try {
+                setSettings(await SettingsService.getSettings());
+            } catch (error) {
+                setSaveError(`Instellingen laden mislukt: ${getErrorMessage(error)}`);
+            }
         };
         if (!isExpired && !settings) {
             fetchData();
         }
     }, [ isExpired, decodedToken, settings ]);
 
-    document.body.style.backgroundColor = '#333';
+    useEffect(() => {
+        document.body.style.backgroundColor = '#333';
+    }, []);
     return (
         <Container
             style={{
@@ -202,7 +221,8 @@ const SettingsComponent = () => {
                                                                         <Col sm={3}>
                                                                             <Field
                                                                                 name={`${name}.clockType`}
-                                                                                component={FormSelect}
+                                                                                component={ClockTypeSelect}
+                                                                                onTypeChange={() => resetToDefault(name, form)}
                                                                                 items={ClockRegistry.map((item) => ({
                                                                                     value: item.id,
                                                                                     text: item.name,

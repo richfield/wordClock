@@ -75,11 +75,19 @@ const updateSettings = async (settings: Settings) => {
     }
 };
 
+const patchSettings = async (patch: Partial<Settings>) => {
+    if (localStorage.getItem('token')) {
+        const latest = await getSettings();
+        await updateSettings({ ...latest, ...patch });
+    }
+};
+
 const SettingsService = {
     login,
     register,
     getSettings,
     updateSettings,
+    patchSettings,
     getCurrentUser
 };
 

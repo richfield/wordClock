@@ -71,7 +71,7 @@ function App(): JSX.Element {
 
   useEffect(() => {
     if (ForceReload && !timerIsActive.isActive) {
-      SettingsService.updateSettings({ ...settings, ForceReload: false })
+      SettingsService.patchSettings({ ForceReload: false })
         .catch(error => console.error('Failed to reset ForceReload', error))
         .finally(() => document.location.reload());
     }
@@ -89,7 +89,7 @@ function App(): JSX.Element {
 
   const timerFinishes = async () => {
     setTimeout(async () => {
-      await SettingsService.updateSettings({ ...settings, Timer: 0 });
+      await SettingsService.patchSettings({ Timer: 0 });
       setTimerIsActive({ isActive: false });
     }, 10000);
   };
