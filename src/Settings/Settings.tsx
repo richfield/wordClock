@@ -139,13 +139,17 @@ const SettingsComponent = () => {
             try {
                 setSettings(await SettingsService.getSettings());
             } catch (error) {
+                if (!localStorage.getItem('token')) {
+                    navigate('/login');
+                    return;
+                }
                 setSaveError(`Instellingen laden mislukt: ${getErrorMessage(error)}`);
             }
         };
         if (!isExpired && !settings) {
             fetchData();
         }
-    }, [ isExpired, decodedToken, settings ]);
+    }, [ isExpired, decodedToken, settings, navigate ]);
 
     useEffect(() => {
         document.body.style.backgroundColor = '#333';

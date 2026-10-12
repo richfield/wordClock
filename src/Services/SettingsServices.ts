@@ -20,6 +20,10 @@ const fetchData = async (path: string, method: 'POST' | 'GET', body: unknown = {
         return await response.json();
     }
     const text = await response.text();
+    if (response.status === 401 && path !== 'login') {
+        // The server no longer accepts this token (e.g. key rotated): drop it so the app asks for a new login
+        localStorage.removeItem('token');
+    }
     let message = text;
     try {
         const parsed = JSON.parse(text);
