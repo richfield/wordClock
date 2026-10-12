@@ -19,7 +19,7 @@ export const isTimeInRange = (now: Date, from: string, to: string): boolean => {
         return false;
     }
     const current = now.getHours() * 60 + now.getMinutes();
-    console.log('current:', current, 'start:', start, 'end:', end);
+    console.log('current:', current, 'start:', start, 'end:', end, 'hours:', now.getHours());
     return start < end ? current >= start && current < end : current >= start || current < end;
 };
 
