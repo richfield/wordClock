@@ -60,7 +60,9 @@ const getSettings = async (): Promise<Settings> => {
     const decodedToken = decodeToken<{ exp?: number }>(localStorage.getItem('token') || '');
     if (decodedToken?.exp && (decodedToken.exp * 1000) > new Date().getTime()) {
         const result = await fetchData('settings', 'GET');
-        return typeof(result) == 'string' ?  JSON.parse(result) : result;
+        const parsed = typeof(result) == 'string' ? JSON.parse(result) : result;
+        // Settings saved by older versions may lack newer keys
+        return { ...defaultSettings, ...parsed };
     }
     return defaultSettings;
 };

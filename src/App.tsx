@@ -108,23 +108,23 @@ const Clock = (props: { settings: Settings; time: Date; }) => {
   const registry = keyBy(ClockRegistry, 'id');
   let componentProps: ClockComponentProps = {
     ...props,
-    clockSettings: getClockSettings(settings)
+    clockSettings: getClockSettings(settings, settings.DefaultClock)
   };
 
   let Component = undefined;
   const active = findActiveSchedule(settings.Schedule, props.time, item => item.clockType in registry);
   if (active) {
-    componentProps.clockSettings = active.clockSettings;
+    componentProps.clockSettings = active.clockSettings ?? getClockSettings(settings, active.clockType);
     Component = registry[ active.clockType ].Component;
   }
   if (!Component) {
-    Component = registry[ settings.DefaultClock ].Component;
+    Component = registry[ settings.DefaultClock ]?.Component ?? registry.wordclock.Component;
   }
   return React.createElement(Component, componentProps);
 };
 
-const getClockSettings = (settings: Settings): ClockSettings => {
-  switch (settings.DefaultClock) {
+const getClockSettings = (settings: Settings, clockType: string): ClockSettings => {
+  switch (clockType) {
     case 'digital':
       return settings.DigitalClockDefaultSettings;
     case 'countdown':
@@ -133,7 +133,7 @@ const getClockSettings = (settings: Settings): ClockSettings => {
       return settings.FlipClockDefaultSettings;
     case 'clockClock24':
       return settings.ClockClock24DefaultSettings;
-    case 'wordClock':
+    case 'wordclock':
     default:
       return settings.WordClockDefaultSettings;
   }

@@ -124,6 +124,15 @@ describe('SettingsService', () => {
             fetchMock.mockResolvedValue(jsonResponse(JSON.stringify({ ...defaultSettings, Timer: 9 })));
             expect((await SettingsService.getSettings()).Timer).toBe(9);
         });
+
+        it('fills in settings missing from older saved data', async () => {
+            store.set('token', makeToken({ exp: nowInSeconds() + 600 }));
+            fetchMock.mockResolvedValue(jsonResponse({ Timer: 5, RefreshRate: 30 }));
+            const result = await SettingsService.getSettings();
+            expect(result.Timer).toBe(5);
+            expect(result.TimerSettings).toEqual(defaultSettings.TimerSettings);
+            expect(result.ClockClock24DefaultSettings).toEqual(defaultSettings.ClockClock24DefaultSettings);
+        });
     });
 
     describe('updateSettings / getCurrentUser', () => {
