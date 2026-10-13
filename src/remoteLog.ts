@@ -73,6 +73,19 @@ const describeEnvironment = (): string => formatArguments([ {
     userAgent: navigator.userAgent
 } ]);
 
+type BatteryManager = { charging: boolean, level: number };
+
+/** Battery state helps tell a power-saving screen timeout apart from a browser problem. */
+const logBattery = (): void => {
+    const getBattery = (navigator as Navigator & { getBattery?: () => Promise<BatteryManager> }).getBattery;
+    if (!getBattery) {
+        return;
+    }
+    getBattery.call(navigator)
+        .then(battery => logInfo(`Battery charging=${battery.charging} level=${Math.round(battery.level * 100)}%`))
+        .catch(() => undefined);
+};
+
 /**
  * Sends console errors and warnings, uncaught errors and some diagnostics to the server.
  * Returns a function that restores the original behaviour.
@@ -93,12 +106,16 @@ export const installRemoteLogging = (sender: (entries: Entry[]) => Promise<unkno
         log('error', `Uncaught: ${event.message} (${event.filename}:${event.lineno}:${event.colno})`);
     const onRejection = (event: PromiseRejectionEvent) =>
         log('error', `Unhandled rejection: ${formatArgument(event.reason)}`);
-    const onVisibility = () => logInfo(`Visibility changed to ${document.visibilityState}`);
+    const onVisibility = () => {
+        logInfo(`Visibility changed to ${document.visibilityState}`);
+        logBattery();
+    };
 
     window.addEventListener('error', onError);
     window.addEventListener('unhandledrejection', onRejection);
     document.addEventListener('visibilitychange', onVisibility);
     logInfo(`App started ${describeEnvironment()}`);
+    logBattery();
 
     return () => {
         console.error = error;
