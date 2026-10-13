@@ -12,6 +12,7 @@ import { isAdventSeason } from './advent';
 import { Settings, ClockComponentProps, ClockSettings } from './types';
 import { keepScreenAwake } from './screenWakeLock';
 import { keepVideoPlaying } from './videoWakeLock';
+import { installRemoteLogging } from './remoteLog';
 
 function App(): JSX.Element {
   const [ settings, setSettings ] = useState<Settings>(defaultSettings);
@@ -23,6 +24,7 @@ function App(): JSX.Element {
     return () => clearInterval(id);
   }, []);
 
+  useEffect(() => installRemoteLogging(SettingsService.sendLogs), []);
   useEffect(keepScreenAwake, []);
   useEffect(keepVideoPlaying, []);
 

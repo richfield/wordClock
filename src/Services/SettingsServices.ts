@@ -18,7 +18,7 @@ const fetchData = async (path: string, method: 'POST' | 'GET', body: unknown = {
         if (token) {
             localStorage.setItem('token', token);
         }
-        return await response.json();
+        return response.status === 204 ? undefined : await response.json();
     }
     const text = await response.text();
     if (response.status === 401 && path !== 'login') {
@@ -89,12 +89,19 @@ const patchSettings = async (patch: Partial<Settings>) => {
     }
 };
 
+const sendLogs = async (entries: Array<{ level: string, time: string, message: string }>) => {
+    if (localStorage.getItem('token')) {
+        await fetchData('log', 'POST', { entries });
+    }
+};
+
 const SettingsService = {
     login,
     register,
     getSettings,
     updateSettings,
     patchSettings,
+    sendLogs,
     getCurrentUser
 };
 

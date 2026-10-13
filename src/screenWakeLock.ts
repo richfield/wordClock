@@ -1,3 +1,5 @@
+import { logInfo } from './remoteLog';
+
 const reportWakeLockError = (error: unknown) => {
   // eslint-disable-next-line no-console
   console.error('Failed to maintain screen wake lock', error);
@@ -36,7 +38,9 @@ export const keepScreenAwake = (): (() => void) => {
         return;
       }
       lock = sentinel;
+      logInfo('Screen wake lock acquired');
       sentinel.addEventListener('release', () => {
+        logInfo(`Screen wake lock released (visibility ${document.visibilityState})`);
         if (lock === sentinel) {
           lock = undefined;
           void requestWhenVisible();

@@ -1,4 +1,5 @@
 import media from 'nosleep.js/src/media.js';
+import { logInfo } from './remoteLog';
 
 const reportVideoError = (error: unknown) => {
   // eslint-disable-next-line no-console
@@ -43,6 +44,8 @@ export const keepVideoPlaying = (): (() => void) => {
   };
 
   document.body.appendChild(video);
+  video.addEventListener('playing', () => logInfo('Wake video is playing'));
+  video.addEventListener('pause', () => logInfo('Wake video paused'));
   video.addEventListener('pause', playWhenVisible);
   video.addEventListener('ended', playWhenVisible);
   document.addEventListener('visibilitychange', playWhenVisible);
