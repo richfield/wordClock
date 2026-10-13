@@ -11,6 +11,7 @@ import { findActiveSchedule, secondsUntil } from './schedule';
 import { isAdventSeason } from './advent';
 import { Settings, ClockComponentProps, ClockSettings } from './types';
 import { keepScreenAwake } from './screenWakeLock';
+import { keepVideoPlaying } from './videoWakeLock';
 
 function App(): JSX.Element {
   const [ settings, setSettings ] = useState<Settings>(defaultSettings);
@@ -23,6 +24,7 @@ function App(): JSX.Element {
   }, []);
 
   useEffect(keepScreenAwake, []);
+  useEffect(keepVideoPlaying, []);
 
   const { ForceReload, RefreshRate } = settings;
   const needsRefresh = RefreshRate > 0 && time.getUTCSeconds() % RefreshRate === 0;
