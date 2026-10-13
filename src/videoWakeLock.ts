@@ -44,8 +44,16 @@ export const keepVideoPlaying = (): (() => void) => {
   };
 
   document.body.appendChild(video);
-  video.addEventListener('playing', () => logInfo('Wake video is playing'));
-  video.addEventListener('pause', () => logInfo('Wake video paused'));
+  // The clip is short and loops, so 'playing' fires on every loop: only report real changes
+  let reportedPlaying: boolean | undefined;
+  const reportPlaying = (playing: boolean) => {
+    if (reportedPlaying !== playing) {
+      reportedPlaying = playing;
+      logInfo(playing ? 'Wake video is playing' : 'Wake video paused');
+    }
+  };
+  video.addEventListener('playing', () => reportPlaying(true));
+  video.addEventListener('pause', () => reportPlaying(false));
   video.addEventListener('pause', playWhenVisible);
   video.addEventListener('ended', playWhenVisible);
   document.addEventListener('visibilitychange', playWhenVisible);
