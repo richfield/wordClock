@@ -10,9 +10,7 @@ import SettingsService from './Services/SettingsServices';
 import { findActiveSchedule, secondsUntil } from './schedule';
 import { isAdventSeason } from './advent';
 import { Settings, ClockComponentProps, ClockSettings } from './types';
-import { useWakeLock } from 'react-screen-wake-lock';
-// Refused requests (hidden page, battery saver) are retried by the effect in App
-const ignoreWakeLockError = () => undefined;
+import { keepScreenAwake } from './screenWakeLock';
 
 function App(): JSX.Element {
   const [ settings, setSettings ] = useState<Settings>(defaultSettings);
@@ -24,22 +22,7 @@ function App(): JSX.Element {
     return () => clearInterval(id);
   }, []);
 
-  const { request, released } = useWakeLock({ onError: ignoreWakeLockError });
-  useEffect(() => {
-    // The browser drops the lock when the page is hidden or on battery saver, so ask again
-    const requestWhenVisible = () => {
-      if (document.visibilityState === 'visible') {
-        request();
-      }
-    };
-    requestWhenVisible();
-    document.addEventListener('visibilitychange', requestWhenVisible);
-    const retry = released ? setInterval(requestWhenVisible, 60000) : undefined;
-    return () => {
-      document.removeEventListener('visibilitychange', requestWhenVisible);
-      clearInterval(retry);
-    };
-  }, [ request, released ]);
+  useEffect(keepScreenAwake, []);
 
   const { ForceReload, RefreshRate } = settings;
   const needsRefresh = RefreshRate > 0 && time.getUTCSeconds() % RefreshRate === 0;
