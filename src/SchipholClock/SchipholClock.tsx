@@ -108,7 +108,7 @@ const Wipe = ({ previous, hands, run, color }: WipeProps) => {
             torsoEl.setAttribute('transform', `translate(${pose.hip.x} ${pose.hip.y}) rotate(${pose.lean})`);
             const [ left, right ] = pose.feet;
             const [ leftKnee, rightKnee ] = pose.knees;
-            legsEl.setAttribute('d', `M${pose.hip.x - 9} ${pose.hip.y} L${leftKnee.x} ${leftKnee.y} L${left.x} ${left.y} M${pose.hip.x + 9} ${pose.hip.y} L${rightKnee.x} ${rightKnee.y} L${right.x} ${right.y}`);
+            legsEl.setAttribute('d', `M${pose.hip.x - 9 * (1 - pose.walking)} ${pose.hip.y} L${leftKnee.x} ${leftKnee.y} L${left.x} ${left.y} M${pose.hip.x + 9 * (1 - pose.walking)} ${pose.hip.y} L${rightKnee.x} ${rightKnee.y} L${right.x} ${right.y}`);
             workingEl.setAttribute('points', points(pose.working));
             restingEl.setAttribute('points', points(pose.resting));
             toolEl.setAttribute('cx', String(pose.working.hand.x));

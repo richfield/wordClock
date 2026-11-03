@@ -182,7 +182,8 @@ export interface Pose {
     knees: [ Point, Point ],
     working: Arm,
     resting: Arm,
-    toolRadius: number
+    toolRadius: number,
+    walking: number
 }
 
 const idleXAt = (elapsed: number): number => elapsed < TIMES.walkOut[ 0 ]
@@ -222,12 +223,17 @@ export const poseAt = (elapsed: number, frame: Frame): Pose => {
     const leftShoulder = shoulderOf(body, -1);
     const stretch = clamp((body.hip.y - (FLOOR - LEG)) / 60, 0, 1.3);
     const feet = ([ -1, 1 ] as const).map(side => ({
-        x: body.hip.x + side * (14 + stretch * 8) + side * swing * 17,
+        x: body.hip.x + side * (14 + stretch * 8) * (1 - walking) + side * swing * 24,
         y: FLOOR - Math.max(0, -side * Math.sin(phase)) * walking * 14
     })) as [ Point, Point ];
 
-    const knees = ([ -1, 1 ] as const).map((side, index) =>
-        kneeOf({ x: body.hip.x + side * 9, y: body.hip.y }, feet[ index ], side)) as [ Point, Point ];
+    // Walking sideways across the dial: the lifted leg bends its knee in the walking direction
+    const direction = Math.sign(idleXAt(elapsed + 20) - idleXAt(elapsed - 20));
+    const knees = ([ -1, 1 ] as const).map((side, index) => {
+        const knee = kneeOf({ x: body.hip.x + side * 9 * (1 - walking), y: body.hip.y }, feet[ index ], side * (1 - walking));
+        const lift = Math.max(0, -side * Math.sin(phase)) * walking;
+        return { x: knee.x + direction * lift * 14, y: knee.y };
+    }) as [ Point, Point ];
 
     return {
         hip: body.hip,
@@ -236,7 +242,8 @@ export const poseAt = (elapsed: number, frame: Frame): Pose => {
         knees,
         working: solveArm(rightShoulder, lerp(relaxed(rightShoulder, 1), frame.hand, engage), 1),
         resting: solveArm(leftShoulder, relaxed(leftShoulder, -1), -1),
-        toolRadius: mix(24, 11, frame.tool)
+        toolRadius: mix(24, 11, frame.tool),
+        walking
     };
 };
 
