@@ -135,6 +135,12 @@ export const solveArm = (shoulder: Point, target: Point, outward: number): Arm =
     return { shoulder, elbow: { x: middle.x + side.x * bend, y: middle.y + side.y * bend }, hand };
 };
 
+// Seen from the front the legs look nearly straight; the knee only bows out a little
+const kneeOf = (hip: Point, foot: Point, side: number): Point => ({
+    x: (hip.x + foot.x) / 2 + side * Math.min(8, Math.max(0, Math.hypot(foot.x - hip.x, foot.y - hip.y) - 120) * 0.3),
+    y: (hip.y + foot.y) / 2
+});
+
 interface Body {
     hip: Point,
     lean: number
@@ -152,7 +158,7 @@ export const workingBody = (target: Point): Body => {
     const crouch = clamp((target.y - 220) / 150);
     const rise = clamp((220 - target.y) / 170);
     const body: Body = {
-        hip: { x: CENTER + (target.x - CENTER) * 0.55, y: FLOOR - LEG + crouch * 70 - rise * 13 },
+        hip: { x: CENTER + (target.x - CENTER) * 0.55, y: FLOOR - LEG + crouch * 60 - rise * 13 },
         lean
     };
     for (let attempt = 0; attempt < 3; attempt++) {
@@ -162,7 +168,7 @@ export const workingBody = (target: Point): Body => {
             const factor = (distance - MAX_REACH) / distance;
             body.hip = {
                 x: body.hip.x + (target.x - shoulder.x) * factor,
-                y: clamp(body.hip.y + (target.y - shoulder.y) * factor, FLOOR - LEG - 15, FLOOR - LEG + 95)
+                y: clamp(body.hip.y + (target.y - shoulder.y) * factor, FLOOR - LEG - 15, FLOOR - LEG + 85)
             };
         }
     }
@@ -173,6 +179,7 @@ export interface Pose {
     hip: Point,
     lean: number,
     feet: [ Point, Point ],
+    knees: [ Point, Point ],
     working: Arm,
     resting: Arm,
     toolRadius: number
@@ -205,16 +212,20 @@ export const poseAt = (elapsed: number, frame: Frame): Pose => {
 
     const rightShoulder = shoulderOf(body, 1);
     const leftShoulder = shoulderOf(body, -1);
-    const stretch = clamp((body.hip.y - (FLOOR - LEG)) / 70, 0, 1.3);
+    const stretch = clamp((body.hip.y - (FLOOR - LEG)) / 60, 0, 1.3);
     const feet = ([ -1, 1 ] as const).map(side => ({
-        x: body.hip.x + side * (22 + stretch * 10) + side * swing * 18,
+        x: body.hip.x + side * (12 + stretch * 8) + side * swing * 16,
         y: FLOOR - Math.max(0, -side * Math.sin(phase)) * walking * 10
     })) as [ Point, Point ];
+
+    const knees = ([ -1, 1 ] as const).map((side, index) =>
+        kneeOf({ x: body.hip.x + side * 9, y: body.hip.y }, feet[ index ], side)) as [ Point, Point ];
 
     return {
         hip: body.hip,
         lean: body.lean,
         feet,
+        knees,
         working: solveArm(rightShoulder, lerp(relaxed(rightShoulder, 1), frame.hand, engage), 1),
         resting: solveArm(leftShoulder, relaxed(leftShoulder, -1), -1),
         toolRadius: mix(24, 11, frame.tool)
