@@ -1,20 +1,21 @@
-import { CENTER, HOUR_LENGTH, MINUTE_LENGTH, Point, spiralPoint, tipPoint } from './hands';
+import { HOUR_LENGTH, MINUTE_LENGTH, Point, spiralPoint, tipPoint } from './hands';
 
 export const TIME_SCALE = 1.7;
 export const DURATION = 7500 * TIME_SCALE;
 export const FLOOR = 400;
-export const UPPER_ARM = 78;
-export const FORE_ARM = 78;
-export const ARM_LENGTH = UPPER_ARM + FORE_ARM;
-export const TORSO = 120;
-export const SHOULDER_HALF = 36;
-export const LEG = 150;
+// A minifig: stiff, straight arms and blocky legs
+export const ARM_LENGTH = 140;
+export const TORSO = 80;
+export const SHOULDER_HALF = 56;
+export const SHOULDER_DROP = 66;
+export const LEG = 100;
+export const LEG_OFFSET = 22;
 
 const HAND_BACK = 25;
-const ENTER_X = -50;
+const ENTER_X = -70;
 const STAND_X = 110;
-const MAX_REACH = ARM_LENGTH * 0.94;
 const STRIDE = 34;
+const MIN_SHOULDER_X = 60;
 
 const scaled = (start: number, end: number) => [ start * TIME_SCALE, end * TIME_SCALE ] as const;
 
@@ -38,6 +39,12 @@ const progress = (elapsed: number, [ start, end ]: Range) => ease(clamp((elapsed
 const mix = (from: number, to: number, amount: number) => from + (to - from) * amount;
 const lerp = (from: Point, to: Point, amount: number): Point => ({ x: mix(from.x, to.x, amount), y: mix(from.y, to.y, amount) });
 const add = (a: Point, b: Point): Point => ({ x: a.x + b.x, y: a.y + b.y });
+const sub = (a: Point, b: Point): Point => ({ x: a.x - b.x, y: a.y - b.y });
+const scale = (a: Point, factor: number): Point => ({ x: a.x * factor, y: a.y * factor });
+const direction = (a: Point): Point => {
+    const length = Math.hypot(a.x, a.y);
+    return length > 1e-6 ? scale(a, 1 / length) : { x: 0, y: 1 };
+};
 
 // Positive angles turn clockwise on screen
 const rotate = (vector: Point, degrees: number): Point => {
@@ -108,38 +115,8 @@ export const frameAt = (elapsed: number, angles: { hour: number, minute: number 
 
 export interface Arm {
     shoulder: Point,
-    elbow: Point,
     hand: Point
 }
-
-/**
- * Two-bone arm of constant length: the elbow bends away from the body (outward and down).
- * The hand is stopped at full stretch when the target is out of reach.
- */
-export const solveArm = (shoulder: Point, target: Point, outward: number): Arm => {
-    const dx = target.x - shoulder.x;
-    const dy = target.y - shoulder.y;
-    const distance = Math.hypot(dx, dy);
-    const ux = distance > 1e-6 ? dx / distance : 0;
-    const uy = distance > 1e-6 ? dy / distance : 1;
-    const reach = Math.min(distance, ARM_LENGTH * 0.999);
-    const hand = { x: shoulder.x + ux * reach, y: shoulder.y + uy * reach };
-    const half = reach / 2;
-    const bend = Math.sqrt(Math.max(0, UPPER_ARM * UPPER_ARM - half * half));
-    const middle = { x: shoulder.x + ux * half, y: shoulder.y + uy * half };
-    const options = [ { x: -uy, y: ux }, { x: uy, y: -ux } ];
-    const preferred = { x: outward * 0.6, y: 1 };
-    const side = options[ 0 ].x * preferred.x + options[ 0 ].y * preferred.y >= options[ 1 ].x * preferred.x + options[ 1 ].y * preferred.y
-        ? options[ 0 ]
-        : options[ 1 ];
-    return { shoulder, elbow: { x: middle.x + side.x * bend, y: middle.y + side.y * bend }, hand };
-};
-
-// Seen from the front the legs look nearly straight; the knee only bows out a little
-const kneeOf = (hip: Point, foot: Point, side: number): Point => ({
-    x: (hip.x + foot.x) / 2 + side * Math.min(8, Math.max(0, Math.hypot(foot.x - hip.x, foot.y - hip.y) - 120) * 0.3),
-    y: (hip.y + foot.y) / 2
-});
 
 interface Body {
     hip: Point,
@@ -147,44 +124,7 @@ interface Body {
 }
 
 const shoulderOf = ({ hip, lean }: Body, side: number): Point =>
-    add(hip, rotate({ x: side * SHOULDER_HALF, y: -TORSO }, lean));
-
-/**
- * Where the body stands to reach a target with the working (right) arm: it leans towards the target,
- * rises on its toes or bends its knees, and only steps sideways when the arm alone cannot reach.
- */
-export const workingBody = (target: Point): Body => {
-    const lean = clamp((target.x - CENTER) / 150, -1, 1) * 12;
-    const crouch = clamp((target.y - 220) / 150);
-    const rise = clamp((220 - target.y) / 170);
-    const body: Body = {
-        hip: { x: CENTER + (target.x - CENTER) * 0.55, y: FLOOR - LEG + crouch * 60 - rise * 13 },
-        lean
-    };
-    for (let attempt = 0; attempt < 3; attempt++) {
-        const shoulder = shoulderOf(body, 1);
-        const distance = Math.hypot(target.x - shoulder.x, target.y - shoulder.y);
-        if (distance > MAX_REACH) {
-            const factor = (distance - MAX_REACH) / distance;
-            body.hip = {
-                x: body.hip.x + (target.x - shoulder.x) * factor,
-                y: clamp(body.hip.y + (target.y - shoulder.y) * factor, FLOOR - LEG - 15, FLOOR - LEG + 85)
-            };
-        }
-    }
-    return body;
-};
-
-export interface Pose {
-    hip: Point,
-    lean: number,
-    feet: [ Point, Point ],
-    knees: [ Point, Point ],
-    working: Arm,
-    resting: Arm,
-    toolRadius: number,
-    walking: number
-}
+    add(hip, rotate({ x: side * SHOULDER_HALF, y: -SHOULDER_DROP }, lean));
 
 const idleXAt = (elapsed: number): number => elapsed < TIMES.walkOut[ 0 ]
     ? mix(ENTER_X, STAND_X, progress(elapsed, TIMES.walkIn))
@@ -196,6 +136,29 @@ const walkedDistance = (elapsed: number): number => elapsed < TIMES.walkOut[ 0 ]
     : STAND_X - ENTER_X + STAND_X - idleXAt(elapsed);
 
 /**
+ * Where the minifig stands to reach a target with its rigid right arm: upright, to the left of the target,
+ * with the arm raised or lowered to the height of the target.
+ */
+export const workingBody = (target: Point): Body => {
+    // Raise the arm further when the target is so far left that the body would leave the dial
+    const comfortable = clamp((230 - target.y) / 120, -1, 1) * 60 * Math.PI / 180;
+    const angle = Math.max(comfortable, Math.acos(clamp((target.x - MIN_SHOULDER_X) / ARM_LENGTH)));
+    const shoulder = {
+        x: target.x - ARM_LENGTH * Math.cos(angle),
+        y: target.y + ARM_LENGTH * Math.sin(angle)
+    };
+    return { hip: { x: shoulder.x - SHOULDER_HALF, y: shoulder.y + SHOULDER_DROP }, lean: 0 };
+};
+export interface Pose {
+    hip: Point,
+    lean: number,
+    feet: [ Point, Point ],
+    working: Arm,
+    resting: Arm,
+    toolRadius: number
+}
+
+/**
  * The whole figure at a moment: walking in and out, then working on the dial.
  */
 export const poseAt = (elapsed: number, frame: Frame): Pose => {
@@ -204,46 +167,28 @@ export const poseAt = (elapsed: number, frame: Frame): Pose => {
     const speed = Math.abs(idleXAt(elapsed + 20) - idleXAt(elapsed - 20)) / 40;
     const walking = clamp(speed / 0.04);
     const phase = walkedDistance(elapsed) / STRIDE * Math.PI;
-    const idle: Body = { hip: { x: idleX, y: FLOOR - LEG - Math.abs(Math.sin(phase)) * 5 * walking }, lean: 0 };
-    const work = workingBody(frame.hand);
-
-    const sway = (Math.sin(elapsed / 900) * 1.2 + Math.sin(elapsed / 370) * 0.5) * engage;
-    const body: Body = {
-        hip: lerp(idle.hip, work.hip, engage),
-        lean: work.lean * engage + sway
-    };
-
     const swing = Math.sin(phase) * walking;
-    const relaxed = (shoulder: Point, side: number): Point => ({
-        x: shoulder.x + side * 6 - side * swing * 15 + Math.sin(elapsed / 700 + side) * 2,
-        y: shoulder.y + 148
-    });
+    const idleHip: Point = { x: idleX, y: FLOOR - LEG - Math.abs(Math.sin(phase)) * 5 * walking };
+    const work = workingBody(frame.hand);
+    const body: Body = { hip: lerp(idleHip, work.hip, engage), lean: work.lean * engage };
 
+    const hang = (side: number, swingAmount: number): Point => direction({ x: side * 0.12 + swingAmount, y: 1 });
     const rightShoulder = shoulderOf(body, 1);
     const leftShoulder = shoulderOf(body, -1);
-    const stretch = clamp((body.hip.y - (FLOOR - LEG)) / 60, 0, 1.3);
+    const reach = direction(sub(frame.hand, rightShoulder));
+    const rightDirection = direction(lerp(hang(1, -swing * 0.5), reach, engage));
+
     const feet = ([ -1, 1 ] as const).map(side => ({
-        x: body.hip.x + side * (14 + stretch * 8) * (1 - walking) + side * swing * 24,
+        x: body.hip.x + side * LEG_OFFSET + side * swing * 26,
         y: FLOOR - Math.max(0, -side * Math.sin(phase)) * walking * 14
     })) as [ Point, Point ];
-
-    // Walking sideways across the dial: the lifted leg bends its knee in the walking direction
-    const direction = Math.sign(idleXAt(elapsed + 20) - idleXAt(elapsed - 20));
-    const knees = ([ -1, 1 ] as const).map((side, index) => {
-        const knee = kneeOf({ x: body.hip.x + side * 9 * (1 - walking), y: body.hip.y }, feet[ index ], side * (1 - walking));
-        const lift = Math.max(0, -side * Math.sin(phase)) * walking;
-        return { x: knee.x + direction * lift * 14, y: knee.y };
-    }) as [ Point, Point ];
 
     return {
         hip: body.hip,
         lean: body.lean,
         feet,
-        knees,
-        working: solveArm(rightShoulder, lerp(relaxed(rightShoulder, 1), frame.hand, engage), 1),
-        resting: solveArm(leftShoulder, relaxed(leftShoulder, -1), -1),
-        toolRadius: mix(24, 11, frame.tool),
-        walking
+        working: { shoulder: rightShoulder, hand: add(rightShoulder, scale(rightDirection, ARM_LENGTH)) },
+        resting: { shoulder: leftShoulder, hand: add(leftShoulder, scale(hang(-1, swing * 0.5), ARM_LENGTH)) },
+        toolRadius: mix(24, 12, frame.tool)
     };
 };
-

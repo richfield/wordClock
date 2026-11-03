@@ -1,11 +1,15 @@
 import { useEffect, useLayoutEffect, useRef } from 'react';
 import { Container } from 'react-bootstrap';
 import { ClockComponentProps } from '../types';
-import { DURATION, frameAt, handSegment, poseAt } from './choreography';
-import { CENTER, HOUR_LENGTH, MINUTE_LENGTH, Point, handAngles, handPath, spiralPath } from './hands';
+import { DURATION, LEG_OFFSET, TORSO, frameAt, handSegment, poseAt } from './choreography';
+import { CENTER, HOUR_LENGTH, MINUTE_LENGTH, handAngles, handPath, spiralPath } from './hands';
 
 const FACE_RADIUS = 192;
-const MAN_COLOR = '#1c2452';
+const MAN_COLOR = '#26306a';
+const HEAD_COLOR = '#36427f';
+const LEG_COLOR = '#1a2150';
+const ARM_COLOR = '#222b5f';
+const HAND_COLOR = '#141a40';
 
 interface Hands {
     hour: string,
@@ -39,23 +43,26 @@ const HandShapes = ({ hands, color, mask }: { hands: Hands, color: string, mask?
 interface ManRefs {
     torso: React.RefObject<SVGGElement>,
     legs: React.RefObject<SVGPathElement>,
-    working: React.RefObject<SVGPolylineElement>,
-    resting: React.RefObject<SVGPolylineElement>,
+    working: React.RefObject<SVGLineElement>,
+    resting: React.RefObject<SVGLineElement>,
+    restHand: React.RefObject<SVGCircleElement>,
     tool: React.RefObject<SVGCircleElement>
 }
 
-// Blurred figure behind the frosted screen. The torso is drawn around the hip, everything else in dial coordinates.
+// A blurred Lego minifig behind the frosted screen. The torso is drawn around the hip, everything else in dial coordinates.
 const Man = ({ refs }: { refs: ManRefs }) => (
-    <g fill={MAN_COLOR} stroke={MAN_COLOR} opacity='0.8' strokeLinecap='round' strokeLinejoin='round'>
-        <path ref={refs.legs} fill='none' strokeWidth='30' />
-        <polyline ref={refs.resting} fill='none' strokeWidth='20' />
+    <g opacity='0.85'>
+        <path ref={refs.legs} fill='none' stroke={LEG_COLOR} strokeWidth='38' strokeLinecap='butt' />
+        <line ref={refs.resting} stroke={ARM_COLOR} strokeWidth='32' strokeLinecap='butt' />
+        <circle ref={refs.restHand} r='17' fill={HAND_COLOR} />
         <g ref={refs.torso}>
-            <path d='M-33 -120 L33 -120 L25 0 L-25 0 Z' strokeWidth='14' />
-            <rect x='-7' y='-140' width='14' height='24' stroke='none' />
-            <circle cx='0' cy='-156' r='19' stroke='none' />
+            <rect x='-46' y='-26' width='92' height='26' fill={LEG_COLOR} />
+            <rect x='-46' y={-TORSO} width='92' height={TORSO - 26} fill={MAN_COLOR} />
+            <rect x='-28' y={-TORSO - 56} width='56' height='56' rx='18' fill={HEAD_COLOR} />
+            <rect x='-12' y={-TORSO - 68} width='24' height='14' rx='5' fill={HEAD_COLOR} />
         </g>
-        <polyline ref={refs.working} fill='none' stroke='#101640' strokeWidth='20' />
-        <circle ref={refs.tool} fill='#141a40' stroke='none' r='24' />
+        <line ref={refs.working} stroke={ARM_COLOR} strokeWidth='32' strokeLinecap='butt' />
+        <circle ref={refs.tool} r='24' fill={HAND_COLOR} />
     </g>
 );
 interface WipeProps {
@@ -76,16 +83,17 @@ const Wipe = ({ previous, hands, run, color }: WipeProps) => {
     const fadeRef = useRef<SVGGElement>(null);
     const torso = useRef<SVGGElement>(null);
     const legs = useRef<SVGPathElement>(null);
-    const working = useRef<SVGPolylineElement>(null);
-    const resting = useRef<SVGPolylineElement>(null);
+    const working = useRef<SVGLineElement>(null);
+    const resting = useRef<SVGLineElement>(null);
+    const restHand = useRef<SVGCircleElement>(null);
     const tool = useRef<SVGCircleElement>(null);
 
     useLayoutEffect(() => {
-        const elements = [ wipeRef, hourRef, minuteRef, fadeRef, torso, legs, working, resting, tool ].map(ref => ref.current);
+        const elements = [ wipeRef, hourRef, minuteRef, fadeRef, torso, legs, working, resting, restHand, tool ].map(ref => ref.current);
         if (elements.some(element => element === null)) {
             return undefined;
         }
-        const [ wipeEl, hourEl, minuteEl, fadeEl, torsoEl, legsEl, workingEl, restingEl, toolEl ] = elements as SVGElement[];
+        const [ wipeEl, hourEl, minuteEl, fadeEl, torsoEl, legsEl, workingEl, restingEl, restHandEl, toolEl ] = elements as SVGElement[];
         const hour = handSegment(hands.angles.hour, HOUR_LENGTH);
         const minute = handSegment(hands.angles.minute, MINUTE_LENGTH);
 
@@ -99,19 +107,17 @@ const Wipe = ({ previous, hands, run, color }: WipeProps) => {
         const apply = (elapsed: number) => {
             const frame = frameAt(elapsed, hands.angles);
             const pose = poseAt(elapsed, frame);
-            const points = (arm: { shoulder: Point, elbow: Point, hand: Point }) =>
-                [ arm.shoulder, arm.elbow, arm.hand ].map(point => `${point.x.toFixed(1)},${point.y.toFixed(1)}`).join(' ');
             wipeEl.setAttribute('d', frame.wipe > 0 ? spiralPath(frame.wipe) : '');
             setLine(hourEl, hour.start, hour.tip, frame.hour);
             setLine(minuteEl, minute.start, minute.tip, frame.minute);
             fadeEl.setAttribute('opacity', String(frame.opacity));
             torsoEl.setAttribute('transform', `translate(${pose.hip.x} ${pose.hip.y}) rotate(${pose.lean})`);
             const [ left, right ] = pose.feet;
-            const [ leftKnee, rightKnee ] = pose.knees;
-            legsEl.setAttribute('d', `M${pose.hip.x - 9 * (1 - pose.walking)} ${pose.hip.y} L${leftKnee.x} ${leftKnee.y} L${left.x} ${left.y} M${pose.hip.x + 9 * (1 - pose.walking)} ${pose.hip.y} L${rightKnee.x} ${rightKnee.y} L${right.x} ${right.y}`);
-            workingEl.setAttribute('points', points(pose.working));
-            restingEl.setAttribute('points', points(pose.resting));
-            toolEl.setAttribute('cx', String(pose.working.hand.x));
+            legsEl.setAttribute('d', `M${pose.hip.x - LEG_OFFSET} ${pose.hip.y} L${left.x} ${left.y} M${pose.hip.x + LEG_OFFSET} ${pose.hip.y} L${right.x} ${right.y}`);
+            setLine(workingEl, pose.working.shoulder, pose.working.hand, 1);
+            setLine(restingEl, pose.resting.shoulder, pose.resting.hand, 1);
+            restHandEl.setAttribute('cx', String(pose.resting.hand.x));
+            restHandEl.setAttribute('cy', String(pose.resting.hand.y));            toolEl.setAttribute('cx', String(pose.working.hand.x));
             toolEl.setAttribute('cy', String(pose.working.hand.y));
             toolEl.setAttribute('r', String(pose.toolRadius));        };
 
@@ -148,7 +154,7 @@ const Wipe = ({ previous, hands, run, color }: WipeProps) => {
             </defs>
             <g clipPath='url(#schiphol-face)'>
                 <g ref={fadeRef} filter='url(#schiphol-blur)' opacity='0' data-testid='schiphol-man'>
-                    <Man refs={{ torso, legs, working, resting, tool }} />
+                    <Man refs={{ torso, legs, working, resting, restHand, tool }} />
                 </g>
             </g>
             <HandShapes hands={previous} color={color} mask={`url(#schiphol-old-${run})`} />
@@ -196,7 +202,7 @@ const SchipholClock = (props: ClockComponentProps): JSX.Element => {
                         <circle cx={CENTER} cy={CENTER} r={FACE_RADIUS} />
                     </clipPath>
                     <filter id='schiphol-blur' x='-50%' y='-20%' width='200%' height='140%'>
-                        <feGaussianBlur stdDeviation='7' />
+                        <feGaussianBlur stdDeviation='5' />
                     </filter>
                 </defs>
                 <circle cx={CENTER} cy={CENTER} r={FACE_RADIUS} fill={shadeColor} />

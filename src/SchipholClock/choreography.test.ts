@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ARM_LENGTH, DURATION, TIME_SCALE, FLOOR, UPPER_ARM, frameAt, handSegment, poseAt, solveArm } from './choreography';
+import { ARM_LENGTH, DURATION, TIME_SCALE, FLOOR, frameAt, handSegment, poseAt } from './choreography';
 import { HOUR_LENGTH, spiralPoint } from './hands';
 
 const angles = { hour: 90, minute: 180 };
@@ -31,23 +31,6 @@ describe('frameAt', () => {
     });
 });
 
-describe('solveArm', () => {
-    it('keeps both bones the same length and bends away from the body', () => {
-        const shoulder = { x: 200, y: 200 };
-        const arm = solveArm(shoulder, { x: 260, y: 140 }, 1);
-        expect(distance(arm.shoulder, arm.elbow)).toBeCloseTo(UPPER_ARM, 5);
-        expect(distance(arm.elbow, arm.hand)).toBeCloseTo(UPPER_ARM, 5);
-        expect(arm.hand).toEqual({ x: 260, y: 140 });
-        expect(arm.elbow.y).toBeGreaterThan((shoulder.y + arm.hand.y) / 2);
-    });
-
-    it('stops the hand at full stretch when the target is out of reach', () => {
-        const arm = solveArm({ x: 200, y: 200 }, { x: 600, y: 200 }, 1);
-        expect(distance(arm.shoulder, arm.hand)).toBeLessThanOrEqual(ARM_LENGTH);
-        expect(arm.hand.x).toBeLessThan(600);
-    });
-});
-
 describe('poseAt', () => {
     const cases = [ { hour: 90, minute: 180 }, { hour: 0, minute: 0 }, { hour: 300, minute: 270 }, { hour: 180, minute: 355 }, { hour: 30, minute: 90 } ];
 
@@ -63,16 +46,14 @@ describe('poseAt', () => {
         });
     });
 
-    it('never stretches or shrinks the arms', () => {
+    it('keeps the rigid arms exactly the same length', () => {
         for (let elapsed = 0; elapsed <= DURATION; elapsed += 100) {
             const pose = poseAt(elapsed, frameAt(elapsed, angles));
             [ pose.working, pose.resting ].forEach(arm => {
-                expect(distance(arm.shoulder, arm.elbow)).toBeCloseTo(UPPER_ARM, 4);
-                expect(distance(arm.elbow, arm.hand)).toBeCloseTo(UPPER_ARM, 4);
+                expect(distance(arm.shoulder, arm.hand)).toBeCloseTo(ARM_LENGTH, 4);
             });
         }
     });
-
     it('keeps the feet on the floor while working', () => {
         const pose = poseAt(DURATION / 2, frameAt(DURATION / 2, angles));
         pose.feet.forEach(foot => expect(foot.y).toBe(FLOOR));
@@ -81,7 +62,7 @@ describe('poseAt', () => {
     it('does not slide sideways further than needed: he is on the dial while working', () => {
         for (let elapsed = 1500 * TIME_SCALE; elapsed <= 6500 * TIME_SCALE; elapsed += 100) {
             const pose = poseAt(elapsed, frameAt(elapsed, angles));
-            expect(pose.hip.x).toBeGreaterThan(40);
+            expect(pose.hip.x).toBeGreaterThan(0);
             expect(pose.hip.x).toBeLessThan(360);
         }
     });
