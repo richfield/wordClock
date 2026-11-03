@@ -11,6 +11,8 @@ export const TORSO = 96;
 export const SHOULDER_HALF = 68;
 export const SHOULDER_DROP = 82;
 export const LEG = 72;
+// Stubby minifig legs while working, so he floats behind the glass instead of having long legs
+const LEG_WORK = 62;
 export const LEG_OFFSET = 27;
 
 const HAND_BACK = 25;
@@ -193,7 +195,7 @@ export const poseAt = (elapsed: number, frame: Frame): Pose => {
 
     const feet = ([ -1, 1 ] as const).map(side => ({
         x: body.hip.x + side * LEG_OFFSET + side * swing * 26,
-        y: FLOOR - Math.max(0, -side * Math.sin(phase)) * walking * 14
+        y: mix(FLOOR, body.hip.y + LEG_WORK, engage) - Math.max(0, -side * Math.sin(phase)) * walking * 14
     })) as [ Point, Point ];
 
     return {
