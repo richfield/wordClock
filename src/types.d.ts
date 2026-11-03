@@ -41,6 +41,7 @@ interface Settings {
     FlipClockDefaultSettings: ClockSettings,
     ClockClock24DefaultSettings: ClockSettings,
     AdventClockDefaultSettings: ClockSettings,
+    SchipholClockDefaultSettings: ClockSettings,
     AdventAutomatic: boolean,
     Timer: number
 

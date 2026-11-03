@@ -3,6 +3,7 @@ import WordClock from './WordClock/WordClock';
 import Countdown from './Countdown/Countdown';
 import FlipClock from './FlipClock/FlipClock';
 import AdventClock from './AdventClock/AdventClock';
+import SchipholClock from './SchipholClock/SchipholClock';
 import ClockClock24 from './ClockClock24/components/ClockClock24/ClockClock24';
 
 const ClockRegistry = [
@@ -11,7 +12,8 @@ const ClockRegistry = [
     { id: 'countdown', name: 'Timer', Component: Countdown },
     { id: 'flipclock', name: 'Flip Clock', Component: FlipClock },
     { id: 'clockClock24', name: 'ClockClock24', Component: ClockClock24 },
-    { id: 'advent', name: 'Adventskrans', Component: AdventClock }
+    { id: 'advent', name: 'Adventskrans', Component: AdventClock },
+    { id: 'schiphol', name: 'Schiphol Clock', Component: SchipholClock }
 ];
 
 export default ClockRegistry;
