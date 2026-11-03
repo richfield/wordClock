@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ARM_LENGTH, DURATION, TIME_SCALE, FLOOR, frameAt, handSegment, poseAt } from './choreography';
+import { ARM_LENGTH, BROOM_GRIP, DURATION, TIME_SCALE, FLOOR, frameAt, handSegment, poseAt } from './choreography';
 import { HOUR_LENGTH, spiralPoint } from './hands';
 
 const angles = { hour: 90, minute: 180 };
@@ -40,7 +40,7 @@ describe('poseAt', () => {
                 const frame = frameAt(elapsed, testAngles);
                 if (frame.engage === 1) {
                     const pose = poseAt(elapsed, frame);
-                    expect(distance(pose.working.hand, frame.hand)).toBeLessThan(0.5);
+                    expect(distance(pose.working.hand, { x: frame.hand.x + BROOM_GRIP.x * (1 - frame.tool), y: frame.hand.y + BROOM_GRIP.y * (1 - frame.tool) })).toBeLessThan(0.5);
                 }
             }
         });

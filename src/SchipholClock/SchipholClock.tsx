@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef } from 'react';
 import { Container } from 'react-bootstrap';
 import { ClockComponentProps } from '../types';
-import { DURATION, LEG_OFFSET, TORSO, frameAt, handSegment, poseAt } from './choreography';
+import { BROOM_GRIP, DURATION, LEG_OFFSET, TORSO, frameAt, handSegment, poseAt } from './choreography';
 import { Point, CENTER, HOUR_LENGTH, MINUTE_LENGTH, handAngles, handPath, spiralPath } from './hands';
 
 const FACE_RADIUS = 192;
@@ -66,8 +66,8 @@ const Man = ({ refs }: { refs: ManRefs }) => (
         </g>
         <polyline ref={refs.working} fill='none' stroke={ARM_COLOR} strokeWidth='32' strokeLinecap='round' strokeLinejoin='round' />
         <g ref={refs.broom}>
-            <line x1='0' y1='0' x2='-34' y2='-150' stroke={BROOM_HANDLE} strokeWidth='9' strokeLinecap='round' />
-            <rect x='-30' y='-4' width='60' height='36' rx='6' fill={BROOM_HEAD} />
+            <line x1='0' y1='0' x2='0' y2='-170' stroke={BROOM_HANDLE} strokeWidth='9' strokeLinecap='round' />
+            <rect x='-30' y='-16' width='60' height='34' rx='6' fill={BROOM_HEAD} />
         </g>
         <circle ref={refs.tool} r='24' fill={HAND_COLOR} />
     </g>
@@ -130,7 +130,7 @@ const Wipe = ({ previous, hands, run, color }: WipeProps) => {
             restHandEl.setAttribute('cy', String(pose.resting.hand.y));            toolEl.setAttribute('cx', String(pose.working.hand.x));
             toolEl.setAttribute('cy', String(pose.working.hand.y));
             toolEl.setAttribute('r', String(pose.toolRadius));
-            broomEl.setAttribute('transform', `translate(${pose.working.hand.x} ${pose.working.hand.y})`);
+            broomEl.setAttribute('transform', `translate(${frame.hand.x} ${frame.hand.y}) rotate(${Math.atan2(BROOM_GRIP.x, -BROOM_GRIP.y) * 180 / Math.PI})`);
             broomEl.setAttribute('opacity', String(1 - frame.tool));
         };
 

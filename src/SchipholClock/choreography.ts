@@ -15,6 +15,9 @@ export const LEG = 90;
 const LEG_WORK = 90;
 export const LEG_OFFSET = 27;
 
+// Where he grips the broom handle, relative to the bristles; leaning back towards his body
+export const BROOM_GRIP: Point = { x: -34, y: -70 };
+
 const HAND_BACK = 25;
 const ENTER_X = -70;
 const STAND_X = 110;
@@ -184,13 +187,14 @@ export const poseAt = (elapsed: number, frame: Frame): Pose => {
     const phase = walkedDistance(elapsed) / STRIDE * Math.PI;
     const swing = Math.sin(phase) * walking;
     const idleHip: Point = { x: idleX, y: FLOOR - LEG - Math.abs(Math.sin(phase)) * 5 * walking };
-    const work = workingBody(frame.hand);
+    const grip = add(frame.hand, scale(BROOM_GRIP, 1 - frame.tool));
+    const work = workingBody(grip);
     const body: Body = { hip: lerp(idleHip, work.hip, engage), lean: work.lean * engage };
 
     const hang = (side: number, swingAmount: number): Point => direction({ x: side * 0.12 + swingAmount, y: 1 });
     const rightShoulder = shoulderOf(body, 1);
     const leftShoulder = shoulderOf(body, -1);
-    const reach = direction(sub(frame.hand, rightShoulder));
+    const reach = direction(sub(grip, rightShoulder));
     const rightDirection = direction(lerp(hang(1, -swing * 0.5), reach, engage));
 
     const feet = ([ -1, 1 ] as const).map(side => ({
