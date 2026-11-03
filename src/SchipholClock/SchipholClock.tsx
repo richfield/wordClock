@@ -1,27 +1,16 @@
-import { RefObject, useEffect, useLayoutEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useRef } from 'react';
 import { Container } from 'react-bootstrap';
 import { ClockComponentProps } from '../types';
-import { CENTER, handAngles, handPath, spiralPath } from './hands';
-import './SchipholClock.css';
+import { DURATION, frameAt, handSegment, poseFor } from './choreography';
+import { CENTER, HOUR_LENGTH, MINUTE_LENGTH, handAngles, handPath, spiralPath } from './hands';
 
-const HOUR_LENGTH = 105;
-const MINUTE_LENGTH = 155;
 const FACE_RADIUS = 192;
-
-// Must match the keyframes in SchipholClock.css
-const MAN_OFFSET = 85;
-const SHOULDER = { x: 134, y: 160 };
-const REST = { x: 134, y: 250 };
-const ARM_RAISED_AT = 1600;
-const WIPE_START = 2200;
-const WIPE_END = 4200;
-const ARM_LOWERED_AT = 4500;
-const WIPE_WIDTH = 56;
-const SPIRAL = spiralPath();
+const MAN_COLOR = '#2a3566';
 
 interface Hands {
     hour: string,
-    minute: string
+    minute: string,
+    angles: { hour: number, minute: number }
 }
 
 interface Drawing {
@@ -32,18 +21,13 @@ interface Drawing {
 }
 
 const buildHands = (time: Date, minuteKey: number): Hands => {
-    const { hour, minute } = handAngles(time);
+    const angles = handAngles(time);
     return {
-        hour: handPath(hour, HOUR_LENGTH, 17, minuteKey),
-        minute: handPath(minute, MINUTE_LENGTH, 12, minuteKey + 7919)
+        hour: handPath(angles.hour, HOUR_LENGTH, 17, minuteKey),
+        minute: handPath(angles.minute, MINUTE_LENGTH, 12, minuteKey + 7919),
+        angles
     };
 };
-
-const clamp = (value: number) => Math.min(1, Math.max(0, value));
-const blend = (from: { x: number, y: number }, to: { x: number, y: number }, amount: number) => ({
-    x: from.x + (to.x - from.x) * amount,
-    y: from.y + (to.y - from.y) * amount
-});
 
 const HandShapes = ({ hands, color, mask }: { hands: Hands, color: string, mask?: string }) => (
     <g fill={color} mask={mask}>
@@ -52,25 +36,23 @@ const HandShapes = ({ hands, color, mask }: { hands: Hands, color: string, mask?
     </g>
 );
 
-// Blurred figure behind the frosted screen; his right arm is drawn separately so it can wipe
-const Man = ({ armRef, clothRef }: { armRef: RefObject<SVGLineElement>, clothRef: RefObject<SVGCircleElement> }) => (
-    <g fill='#2a3566' opacity='0.6'>
-        <circle cx='95' cy='120' r='19' />
-        <rect x='60' y='142' width='70' height='115' rx='26' />
-        <rect x='46' y='150' width='20' height='95' rx='10' />
-        <rect x='68' y='250' width='23' height='140' rx='9' />
-        <rect x='99' y='250' width='23' height='140' rx='9' />
-        <line
-            ref={armRef}
-            x1={SHOULDER.x}
-            y1={SHOULDER.y}
-            x2={REST.x}
-            y2={REST.y}
-            stroke='#1b2352'
-            strokeWidth='22'
-            strokeLinecap='round'
-        />
-        <circle ref={clothRef} cx={REST.x} cy={REST.y} r='20' fill='#141a40' />
+interface ManRefs {
+    body: React.RefObject<SVGGElement>,
+    arm: React.RefObject<SVGLineElement>,
+    cloth: React.RefObject<SVGCircleElement>,
+    restArm: React.RefObject<SVGRectElement>
+}
+
+// Blurred figure behind the frosted screen. The body is drawn around its own origin (the middle of the shoulders).
+const Man = ({ refs }: { refs: ManRefs }) => (
+    <g ref={refs.body} fill={MAN_COLOR} opacity='0.6'>
+        <circle cx='0' cy='-24' r='19' />
+        <rect x='-35' y='0' width='70' height='115' rx='26' />
+        <rect ref={refs.restArm} x='-37' y='10' width='18' height='95' rx='9' />
+        <rect x='-27' y='108' width='23' height='150' rx='9' />
+        <rect x='4' y='108' width='23' height='150' rx='9' />
+        <line ref={refs.arm} stroke='#1b2352' strokeWidth='22' strokeLinecap='round' />
+        <circle ref={refs.cloth} r='20' fill='#141a40' />
     </g>
 );
 
@@ -82,73 +64,83 @@ interface WipeProps {
 }
 
 /**
- * The man raises his arm and wipes the old hands away in a spiral; the erased area follows his
- * cloth exactly. Then the new hands are painted in.
+ * The man wipes the old hands away in a spiral with a cloth, then paints the new hands.
+ * His body follows his hand so the arm keeps the same length.
  */
 const Wipe = ({ previous, hands, run, color }: WipeProps) => {
-    const pathRef = useRef<SVGPathElement>(null);
-    const armRef = useRef<SVGLineElement>(null);
-    const clothRef = useRef<SVGCircleElement>(null);
+    const wipeRef = useRef<SVGPathElement>(null);
+    const hourRef = useRef<SVGLineElement>(null);
+    const minuteRef = useRef<SVGLineElement>(null);
+    const fadeRef = useRef<SVGGElement>(null);
+    const body = useRef<SVGGElement>(null);
+    const arm = useRef<SVGLineElement>(null);
+    const cloth = useRef<SVGCircleElement>(null);
+    const restArm = useRef<SVGRectElement>(null);
 
     useLayoutEffect(() => {
-        const path = pathRef.current;
-        const arm = armRef.current;
-        const cloth = clothRef.current;
-        if (!path || !arm || !cloth) {
+        const elements = [ wipeRef, hourRef, minuteRef, fadeRef, body, arm, cloth, restArm ].map(ref => ref.current);
+        if (elements.some(element => element === null)) {
             return undefined;
         }
-        const length = path.getTotalLength();
-        path.style.strokeDasharray = `${length}`;
-        if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
-            path.style.strokeDashoffset = '0';
-            return undefined;
-        }
+        const [ wipeEl, hourEl, minuteEl, fadeEl, bodyEl, armEl, clothEl, restArmEl ] = elements as SVGElement[];
+        const hour = handSegment(hands.angles.hour, HOUR_LENGTH);
+        const minute = handSegment(hands.angles.minute, MINUTE_LENGTH);
 
-        const toMan = (point: { x: number, y: number }) => ({ x: point.x - MAN_OFFSET, y: point.y });
-        const apply = (elapsed: number) => {
-            const progress = clamp((elapsed - WIPE_START) / (WIPE_END - WIPE_START));
-            const clothPoint = toMan(path.getPointAtLength(progress * length));
-            let target = clothPoint;
-            if (elapsed < WIPE_START) {
-                target = blend(REST, clothPoint, clamp((elapsed - ARM_RAISED_AT) / (WIPE_START - ARM_RAISED_AT)));
-            } else if (elapsed > WIPE_END) {
-                target = blend(clothPoint, REST, clamp((elapsed - WIPE_END) / (ARM_LOWERED_AT - WIPE_END)));
-            }
-            path.style.strokeDashoffset = `${length * (1 - progress)}`;
-            arm.setAttribute('x2', String(target.x));
-            arm.setAttribute('y2', String(target.y));
-            cloth.setAttribute('cx', String(target.x));
-            cloth.setAttribute('cy', String(target.y));
+        const setLine = (line: SVGElement, from: { x: number, y: number }, to: { x: number, y: number }, amount: number) => {
+            line.setAttribute('x1', String(from.x));
+            line.setAttribute('y1', String(from.y));
+            line.setAttribute('x2', String(from.x + (to.x - from.x) * amount));
+            line.setAttribute('y2', String(from.y + (to.y - from.y) * amount));
         };
+
+        const apply = (elapsed: number) => {
+            const frame = frameAt(elapsed, hands.angles);
+            const pose = poseFor(frame.hand);
+            wipeEl.setAttribute('d', frame.wipe > 0 ? spiralPath(frame.wipe) : '');
+            setLine(hourEl, hour.start, hour.tip, frame.hour);
+            setLine(minuteEl, minute.start, minute.tip, frame.minute);
+            fadeEl.setAttribute('opacity', String(frame.opacity));
+            bodyEl.setAttribute('transform', `translate(${pose.body.x} ${pose.body.y})`);
+            setLine(armEl, pose.shoulder, pose.hand, 1);
+            clothEl.setAttribute('cx', String(pose.hand.x));
+            clothEl.setAttribute('cy', String(pose.hand.y));
+            restArmEl.setAttribute('x', String(pose.restArmX));
+        };
+
+        if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+            apply(DURATION);
+            return undefined;
+        }
 
         const start = performance.now();
         let frame = 0;
         const tick = (now: number) => {
-            const elapsed = now - start;
+            const elapsed = Math.min(DURATION, now - start);
             apply(elapsed);
-            if (elapsed < ARM_LOWERED_AT) {
+            if (elapsed < DURATION) {
                 frame = requestAnimationFrame(tick);
             }
         };
         apply(0);
         frame = requestAnimationFrame(tick);
         return () => cancelAnimationFrame(frame);
-    }, []);
+    }, [ hands ]);
 
     return (
         <g>
             <defs>
                 <mask id={`schiphol-old-${run}`}>
                     <rect x='0' y='0' width='400' height='400' fill='white' />
-                    <path ref={pathRef} d={SPIRAL} fill='none' stroke='black' strokeWidth={WIPE_WIDTH} strokeLinecap='round' strokeLinejoin='round' />
+                    <path ref={wipeRef} fill='none' stroke='black' strokeWidth='56' strokeLinecap='round' strokeLinejoin='round' />
                 </mask>
                 <mask id={`schiphol-new-${run}`}>
-                    <circle className='schiphol-draw-mask' cx={CENTER} cy={CENTER} r='0' fill='white' />
+                    <line ref={hourRef} stroke='white' strokeWidth='40' />
+                    <line ref={minuteRef} stroke='white' strokeWidth='40' />
                 </mask>
             </defs>
             <g clipPath='url(#schiphol-face)'>
-                <g className='schiphol-man' filter='url(#schiphol-blur)' data-testid='schiphol-man'>
-                    <Man armRef={armRef} clothRef={clothRef} />
+                <g ref={fadeRef} filter='url(#schiphol-blur)' opacity='0' data-testid='schiphol-man'>
+                    <Man refs={{ body, arm, cloth, restArm }} />
                 </g>
             </g>
             <HandShapes hands={previous} color={color} mask={`url(#schiphol-old-${run})`} />

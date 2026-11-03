@@ -1,5 +1,12 @@
 export const CENTER = 200;
+export const HOUR_LENGTH = 105;
+export const MINUTE_LENGTH = 155;
 const SEGMENTS = 8;
+
+export interface Point {
+    x: number,
+    y: number
+}
 
 // Small deterministic generator so a minute always gets the same "hand drawn" hands
 const seededRandom = (seed: number) => {
@@ -19,17 +26,36 @@ export const handAngles = (time: Date): { hour: number, minute: number } => ({
 });
 
 /**
- * Path the cloth follows when wiping the dial: a spiral from the rim to the middle.
+ * Point at the given distance from the middle, in the direction of angle (degrees clockwise from 12 o'clock).
  */
-export const spiralPath = (startRadius = 150, endRadius = 12, turns = 3, points = 180): string =>
-    Array.from({ length: points + 1 }, (_, index) => {
-        const progress = index / points;
-        const radius = startRadius + (endRadius - startRadius) * progress;
-        const angle = -Math.PI / 2 + progress * turns * 2 * Math.PI;
-        const x = CENTER + radius * Math.cos(angle);
-        const y = CENTER + radius * Math.sin(angle);
+export const tipPoint = (angle: number, length: number): Point => {
+    const radians = angle * Math.PI / 180;
+    return { x: CENTER + length * Math.sin(radians), y: CENTER - length * Math.cos(radians) };
+};
+
+const SPIRAL_START = 150;
+const SPIRAL_END = 12;
+const SPIRAL_TURNS = 3;
+
+/**
+ * Where the cloth is when wiping the dial: a spiral from the top of the rim to the middle (progress 0 to 1).
+ */
+export const spiralPoint = (progress: number): Point => {
+    const radius = SPIRAL_START + (SPIRAL_END - SPIRAL_START) * progress;
+    const angle = -Math.PI / 2 + progress * SPIRAL_TURNS * 2 * Math.PI;
+    return { x: CENTER + radius * Math.cos(angle), y: CENTER + radius * Math.sin(angle) };
+};
+
+/**
+ * The part of the spiral the cloth has covered so far.
+ */
+export const spiralPath = (progress = 1, steps = 180): string => {
+    const count = Math.max(1, Math.ceil(progress * steps));
+    return Array.from({ length: count + 1 }, (_, index) => {
+        const { x, y } = spiralPoint(Math.min(progress, index / steps));
         return `${index === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${y.toFixed(1)}`;
     }).join(' ');
+};
 
 /**
  * Outline of a slightly wobbly, tapered hand pointing at angle (degrees clockwise from 12 o'clock).
