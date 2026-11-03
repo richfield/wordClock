@@ -47,12 +47,12 @@ interface ManRefs {
 // Blurred figure behind the frosted screen. The torso is drawn around the hip, everything else in dial coordinates.
 const Man = ({ refs }: { refs: ManRefs }) => (
     <g fill={MAN_COLOR} stroke={MAN_COLOR} opacity='0.8' strokeLinecap='round' strokeLinejoin='round'>
-        <path ref={refs.legs} fill='none' strokeWidth='23' />
+        <path ref={refs.legs} fill='none' strokeWidth='19' />
         <polyline ref={refs.resting} fill='none' strokeWidth='20' />
         <g ref={refs.torso}>
-            <path d='M-40 -120 L40 -120 L28 0 L-28 0 Z' strokeWidth='14' />
-            <rect x='-8' y='-142' width='16' height='26' stroke='none' />
-            <circle cx='0' cy='-158' r='22' stroke='none' />
+            <path d='M-36 -120 L36 -120 L26 0 L-26 0 Z' strokeWidth='14' />
+            <rect x='-7' y='-140' width='14' height='24' stroke='none' />
+            <circle cx='0' cy='-156' r='19' stroke='none' />
         </g>
         <polyline ref={refs.working} fill='none' stroke='#101640' strokeWidth='20' />
         <circle ref={refs.tool} fill='#141a40' stroke='none' r='24' />

@@ -3,11 +3,11 @@ import { CENTER, HOUR_LENGTH, MINUTE_LENGTH, Point, spiralPoint, tipPoint } from
 export const TIME_SCALE = 1.7;
 export const DURATION = 7500 * TIME_SCALE;
 export const FLOOR = 400;
-export const UPPER_ARM = 86;
-export const FORE_ARM = 86;
+export const UPPER_ARM = 78;
+export const FORE_ARM = 78;
 export const ARM_LENGTH = UPPER_ARM + FORE_ARM;
 export const TORSO = 120;
-export const SHOULDER_HALF = 40;
+export const SHOULDER_HALF = 36;
 export const LEG = 150;
 
 const HAND_BACK = 25;
@@ -199,15 +199,15 @@ export const poseAt = (elapsed: number, frame: Frame): Pose => {
 
     const swing = Math.sin(phase) * walking;
     const relaxed = (shoulder: Point, side: number): Point => ({
-        x: shoulder.x + side * 10 - side * swing * 15 + Math.sin(elapsed / 700 + side) * 2,
-        y: shoulder.y + 150
+        x: shoulder.x + side * 6 - side * swing * 15 + Math.sin(elapsed / 700 + side) * 2,
+        y: shoulder.y + 148
     });
 
     const rightShoulder = shoulderOf(body, 1);
     const leftShoulder = shoulderOf(body, -1);
     const stretch = clamp((body.hip.y - (FLOOR - LEG)) / 70, 0, 1.3);
     const feet = ([ -1, 1 ] as const).map(side => ({
-        x: body.hip.x + side * (13 + stretch * 11) + side * swing * 18,
+        x: body.hip.x + side * (22 + stretch * 10) + side * swing * 18,
         y: FLOOR - Math.max(0, -side * Math.sin(phase)) * walking * 10
     })) as [ Point, Point ];
 
