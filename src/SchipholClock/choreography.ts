@@ -2,13 +2,13 @@ import { CENTER, HOUR_LENGTH, MINUTE_LENGTH, Point, spiralPoint, tipPoint } from
 
 export const TIME_SCALE = 1.7;
 export const DURATION = 7500 * TIME_SCALE;
-export const FLOOR = 385;
-export const UPPER_ARM = 66;
-export const FORE_ARM = 66;
+export const FLOOR = 400;
+export const UPPER_ARM = 86;
+export const FORE_ARM = 86;
 export const ARM_LENGTH = UPPER_ARM + FORE_ARM;
-export const TORSO = 92;
-export const SHOULDER_HALF = 30;
-export const LEG = 118;
+export const TORSO = 120;
+export const SHOULDER_HALF = 40;
+export const LEG = 150;
 
 const HAND_BACK = 25;
 const ENTER_X = -50;
@@ -152,7 +152,7 @@ export const workingBody = (target: Point): Body => {
     const crouch = clamp((target.y - 220) / 150);
     const rise = clamp((220 - target.y) / 170);
     const body: Body = {
-        hip: { x: CENTER + (target.x - CENTER) * 0.55, y: FLOOR - LEG + crouch * 55 - rise * 10 },
+        hip: { x: CENTER + (target.x - CENTER) * 0.55, y: FLOOR - LEG + crouch * 70 - rise * 13 },
         lean
     };
     for (let attempt = 0; attempt < 3; attempt++) {
@@ -162,7 +162,7 @@ export const workingBody = (target: Point): Body => {
             const factor = (distance - MAX_REACH) / distance;
             body.hip = {
                 x: body.hip.x + (target.x - shoulder.x) * factor,
-                y: clamp(body.hip.y + (target.y - shoulder.y) * factor, FLOOR - LEG - 12, FLOOR - LEG + 75)
+                y: clamp(body.hip.y + (target.y - shoulder.y) * factor, FLOOR - LEG - 15, FLOOR - LEG + 95)
             };
         }
     }
@@ -188,7 +188,7 @@ export const poseAt = (elapsed: number, frame: Frame): Pose => {
     const idleX = elapsed < TIMES.walkOut[ 0 ]
         ? mix(ENTER_X, STAND_X, progress(elapsed, TIMES.walkIn))
         : mix(STAND_X, ENTER_X, progress(elapsed, TIMES.walkOut));
-    const idle: Body = { hip: { x: idleX, y: FLOOR - LEG - Math.abs(Math.sin(phase)) * 3 * walking }, lean: 0 };
+    const idle: Body = { hip: { x: idleX, y: FLOOR - LEG - Math.abs(Math.sin(phase)) * 4 * walking }, lean: 0 };
     const work = workingBody(frame.hand);
 
     const sway = (Math.sin(elapsed / 900) * 1.2 + Math.sin(elapsed / 370) * 0.5) * engage;
@@ -199,15 +199,15 @@ export const poseAt = (elapsed: number, frame: Frame): Pose => {
 
     const swing = Math.sin(phase) * walking;
     const relaxed = (shoulder: Point, side: number): Point => ({
-        x: shoulder.x + side * 8 - side * swing * 12 + Math.sin(elapsed / 700 + side) * 2,
-        y: shoulder.y + 116
+        x: shoulder.x + side * 10 - side * swing * 15 + Math.sin(elapsed / 700 + side) * 2,
+        y: shoulder.y + 150
     });
 
     const rightShoulder = shoulderOf(body, 1);
     const leftShoulder = shoulderOf(body, -1);
-    const stretch = clamp((body.hip.y - (FLOOR - LEG)) / 55, 0, 1.3);
+    const stretch = clamp((body.hip.y - (FLOOR - LEG)) / 70, 0, 1.3);
     const feet = ([ -1, 1 ] as const).map(side => ({
-        x: body.hip.x + side * (10 + stretch * 9) + side * swing * 14,
+        x: body.hip.x + side * (13 + stretch * 11) + side * swing * 18,
         y: FLOOR - Math.max(0, -side * Math.sin(phase)) * walking * 10
     })) as [ Point, Point ];
 
@@ -217,7 +217,7 @@ export const poseAt = (elapsed: number, frame: Frame): Pose => {
         feet,
         working: solveArm(rightShoulder, lerp(relaxed(rightShoulder, 1), frame.hand, engage), 1),
         resting: solveArm(leftShoulder, relaxed(leftShoulder, -1), -1),
-        toolRadius: mix(20, 9, frame.tool)
+        toolRadius: mix(24, 11, frame.tool)
     };
 };
 

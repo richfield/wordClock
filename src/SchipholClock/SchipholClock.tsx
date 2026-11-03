@@ -5,7 +5,7 @@ import { DURATION, frameAt, handSegment, poseAt } from './choreography';
 import { CENTER, HOUR_LENGTH, MINUTE_LENGTH, Point, handAngles, handPath, spiralPath } from './hands';
 
 const FACE_RADIUS = 192;
-const MAN_COLOR = '#2a3566';
+const MAN_COLOR = '#1c2452';
 
 interface Hands {
     hour: string,
@@ -46,16 +46,16 @@ interface ManRefs {
 
 // Blurred figure behind the frosted screen. The torso is drawn around the hip, everything else in dial coordinates.
 const Man = ({ refs }: { refs: ManRefs }) => (
-    <g fill={MAN_COLOR} stroke={MAN_COLOR} opacity='0.6' strokeLinecap='round' strokeLinejoin='round'>
-        <path ref={refs.legs} fill='none' strokeWidth='17' />
-        <polyline ref={refs.resting} fill='none' strokeWidth='15' />
+    <g fill={MAN_COLOR} stroke={MAN_COLOR} opacity='0.8' strokeLinecap='round' strokeLinejoin='round'>
+        <path ref={refs.legs} fill='none' strokeWidth='23' />
+        <polyline ref={refs.resting} fill='none' strokeWidth='20' />
         <g ref={refs.torso}>
-            <path d='M-30 -92 L30 -92 L21 0 L-21 0 Z' strokeWidth='10' />
-            <rect x='-6' y='-110' width='12' height='20' stroke='none' />
-            <circle cx='0' cy='-122' r='17' stroke='none' />
+            <path d='M-40 -120 L40 -120 L28 0 L-28 0 Z' strokeWidth='14' />
+            <rect x='-8' y='-142' width='16' height='26' stroke='none' />
+            <circle cx='0' cy='-158' r='22' stroke='none' />
         </g>
-        <polyline ref={refs.working} fill='none' stroke='#1b2352' strokeWidth='15' />
-        <circle ref={refs.tool} fill='#141a40' stroke='none' r='20' />
+        <polyline ref={refs.working} fill='none' stroke='#101640' strokeWidth='20' />
+        <circle ref={refs.tool} fill='#141a40' stroke='none' r='24' />
     </g>
 );
 interface WipeProps {
