@@ -22,6 +22,7 @@ const ENTER_X = -130;
 // While wiping with the long broom he stays here; for painting he walks along with the brush
 const STAND_X = 30;
 const PAINT_DISTANCE = 148;
+const CARRY_TIP = 60;
 const PAINT_MIN_X = 0;
 const PAINT_MAX_X = 300;
 const STRIDE = 34;
@@ -176,11 +177,15 @@ export const poseAt = (elapsed: number, frame: Frame): Pose => {
         y: FLOOR - Math.max(0, -side * Math.sin(phase)) * walking * 14
     })) as [ Point, Point ];
 
+    const working = armTo(rightShoulder, rightDirection, reach);
+    // Before and after the work he carries the tool like a staff
+    const carried = add(working.hand, scale(rightDirection, CARRY_TIP));
+
     return {
         hip,
         feet,
-        working: armTo(rightShoulder, rightDirection, reach),
+        working,
         resting: armTo(shoulderOf(hip, -1), hang(-1, swing * 0.5), ARM_LENGTH),
-        tip: frame.hand
+        tip: lerp(carried, frame.hand, engage)
     };
 };

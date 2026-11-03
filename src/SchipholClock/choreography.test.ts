@@ -38,7 +38,9 @@ describe('poseAt', () => {
         cases.forEach(testAngles => {
             for (let elapsed = 0; elapsed <= DURATION; elapsed += 50) {
                 const frame = frameAt(elapsed, testAngles);
-                expect(distance(poseAt(elapsed, frame).tip, frame.hand)).toBeLessThan(1e-6);
+                if (frame.engage === 1) {
+                    expect(distance(poseAt(elapsed, frame).tip, frame.hand)).toBeLessThan(1e-6);
+                }
             }
         });
     });
@@ -49,6 +51,16 @@ describe('poseAt', () => {
             expect(distance(pose.resting.shoulder, pose.resting.hand)).toBeCloseTo(ARM_LENGTH, 4);
         }
     });
+    it('carries the tool with him when he arrives and leaves', () => {
+        cases.forEach(testAngles => {
+            [ 0, DURATION ].forEach(elapsed => {
+                const pose = poseAt(elapsed, frameAt(elapsed, testAngles));
+                expect(distance(pose.tip, pose.working.hand)).toBeLessThanOrEqual(60 + 1e-6);
+                expect(pose.tip.y).toBeLessThanOrEqual(FLOOR);
+            });
+        });
+    });
+
     it('keeps the feet on the floor while working', () => {
         const pose = poseAt(DURATION / 2, frameAt(DURATION / 2, angles));
         pose.feet.forEach(foot => expect(foot.y).toBeLessThanOrEqual(FLOOR));

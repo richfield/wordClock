@@ -142,7 +142,7 @@ const Wipe = ({ previous, hands, run, color }: WipeProps) => {
             const { shoulder } = pose.working;
             const angle = Math.atan2(tip.y - shoulder.y, tip.x - shoulder.x) * 180 / Math.PI;
             broomEl.setAttribute('transform', `translate(${tip.x} ${tip.y}) rotate(${angle})`);
-            broomEl.setAttribute('opacity', String(frame.engage > 0 ? 1 : 0));
+            broomEl.setAttribute('opacity', '1');
             sweepEl.setAttribute('opacity', String(1 - frame.tool));
             paintEl.setAttribute('opacity', String(frame.tool));
         };
