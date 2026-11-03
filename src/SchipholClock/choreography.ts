@@ -14,7 +14,7 @@ const HAND_BACK = 25;
 const ENTER_X = -50;
 const STAND_X = 110;
 const MAX_REACH = ARM_LENGTH * 0.94;
-const STEP_SPEED = 300;
+const STRIDE = 34;
 
 const scaled = (start: number, end: number) => [ start * TIME_SCALE, end * TIME_SCALE ] as const;
 
@@ -185,17 +185,25 @@ export interface Pose {
     toolRadius: number
 }
 
+const idleXAt = (elapsed: number): number => elapsed < TIMES.walkOut[ 0 ]
+    ? mix(ENTER_X, STAND_X, progress(elapsed, TIMES.walkIn))
+    : mix(STAND_X, ENTER_X, progress(elapsed, TIMES.walkOut));
+
+// Distance covered so far, so the steps match the speed over the ground
+const walkedDistance = (elapsed: number): number => elapsed < TIMES.walkOut[ 0 ]
+    ? idleXAt(elapsed) - ENTER_X
+    : STAND_X - ENTER_X + STAND_X - idleXAt(elapsed);
+
 /**
  * The whole figure at a moment: walking in and out, then working on the dial.
  */
 export const poseAt = (elapsed: number, frame: Frame): Pose => {
     const { engage } = frame;
-    const walking = 1 - engage;
-    const phase = elapsed / STEP_SPEED;
-    const idleX = elapsed < TIMES.walkOut[ 0 ]
-        ? mix(ENTER_X, STAND_X, progress(elapsed, TIMES.walkIn))
-        : mix(STAND_X, ENTER_X, progress(elapsed, TIMES.walkOut));
-    const idle: Body = { hip: { x: idleX, y: FLOOR - LEG - Math.abs(Math.sin(phase)) * 4 * walking }, lean: 0 };
+    const idleX = idleXAt(elapsed);
+    const speed = Math.abs(idleXAt(elapsed + 20) - idleXAt(elapsed - 20)) / 40;
+    const walking = clamp(speed / 0.04);
+    const phase = walkedDistance(elapsed) / STRIDE * Math.PI;
+    const idle: Body = { hip: { x: idleX, y: FLOOR - LEG - Math.abs(Math.sin(phase)) * 5 * walking }, lean: 0 };
     const work = workingBody(frame.hand);
 
     const sway = (Math.sin(elapsed / 900) * 1.2 + Math.sin(elapsed / 370) * 0.5) * engage;
@@ -214,8 +222,8 @@ export const poseAt = (elapsed: number, frame: Frame): Pose => {
     const leftShoulder = shoulderOf(body, -1);
     const stretch = clamp((body.hip.y - (FLOOR - LEG)) / 60, 0, 1.3);
     const feet = ([ -1, 1 ] as const).map(side => ({
-        x: body.hip.x + side * (14 + stretch * 8) + side * swing * 16,
-        y: FLOOR - Math.max(0, -side * Math.sin(phase)) * walking * 10
+        x: body.hip.x + side * (14 + stretch * 8) + side * swing * 17,
+        y: FLOOR - Math.max(0, -side * Math.sin(phase)) * walking * 14
     })) as [ Point, Point ];
 
     const knees = ([ -1, 1 ] as const).map((side, index) =>
