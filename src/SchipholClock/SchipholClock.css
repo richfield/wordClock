@@ -1,50 +1,34 @@
-@keyframes schiphol-wipe-out {
-  from { width: 0; }
-  to { width: 400px; }
+@keyframes schiphol-reveal {
+  from { r: 0px; }
+  to { r: 210px; }
 }
 
-@keyframes schiphol-draw-in {
-  from { x: 400px; width: 0; }
-  to { x: 0; width: 400px; }
+@keyframes schiphol-man {
+  0% { opacity: 0; transform: translateX(-70px); }
+  12% { opacity: 1; transform: translateX(0); }
+  30% { opacity: 1; transform: translateX(85px); }
+  62% { opacity: 1; transform: translateX(85px); }
+  80% { opacity: 1; transform: translateX(0); }
+  100% { opacity: 0; transform: translateX(-70px); }
 }
 
-@keyframes schiphol-squeegee-forward {
-  0% { transform: translateX(0); opacity: 0; }
-  2% { opacity: 1; }
-  98% { opacity: 1; }
-  100% { transform: translateX(400px); opacity: 0; }
-}
-
-@keyframes schiphol-squeegee-back {
-  0% { transform: translateX(400px); opacity: 0; }
-  2% { opacity: 1; }
-  98% { opacity: 1; }
-  100% { transform: translateX(0); opacity: 0; }
-}
-
-.schiphol-wipe-mask {
-  animation: schiphol-wipe-out 1.4s ease-in-out both;
+.schiphol-erase-mask {
+  animation: schiphol-reveal 1.4s ease-in-out 1.6s both;
 }
 
 .schiphol-draw-mask {
-  animation: schiphol-draw-in 1.4s ease-in-out 1.5s both;
+  animation: schiphol-reveal 1.8s ease-in-out 3.2s both;
 }
 
-.schiphol-squeegee-forward {
+.schiphol-man {
   opacity: 0;
-  animation: schiphol-squeegee-forward 1.4s ease-in-out both;
-}
-
-.schiphol-squeegee-back {
-  opacity: 0;
-  animation: schiphol-squeegee-back 1.4s ease-in-out 1.5s both;
+  animation: schiphol-man 7s ease-in-out both;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .schiphol-wipe-mask,
+  .schiphol-erase-mask,
   .schiphol-draw-mask,
-  .schiphol-squeegee-forward,
-  .schiphol-squeegee-back {
+  .schiphol-man {
     animation-duration: 0.01s;
     animation-delay: 0s;
   }

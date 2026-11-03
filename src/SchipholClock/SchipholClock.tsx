@@ -5,7 +5,8 @@ import { CENTER, handAngles, handPath } from './hands';
 import './SchipholClock.css';
 
 const HOUR_LENGTH = 105;
-const MINUTE_LENGTH = 160;
+const MINUTE_LENGTH = 155;
+const FACE_RADIUS = 192;
 
 interface Hands {
     hour: string,
@@ -34,9 +35,21 @@ const HandShapes = ({ hands, color, mask }: { hands: Hands, color: string, mask?
     </g>
 );
 
+// Blurred figure behind the frosted screen, standing with his feet at the bottom of the dial
+const Man = () => (
+    <g fill='#2a3566' opacity='0.6'>
+        <circle cx='95' cy='120' r='19' />
+        <rect x='60' y='142' width='70' height='115' rx='26' />
+        <rect x='46' y='150' width='20' height='95' rx='10' />
+        <rect x='124' y='150' width='20' height='95' rx='10' />
+        <rect x='68' y='250' width='23' height='140' rx='9' />
+        <rect x='99' y='250' width='23' height='140' rx='9' />
+    </g>
+);
+
 /**
- * Inspired by Maarten Baas' "Schiphol Clock": every minute the old hands are wiped away
- * with a squeegee and the new ones are drawn on the way back.
+ * Inspired by Maarten Baas' "Schiphol Clock": every minute a man behind the screen
+ * wipes the old hands away and paints the new ones.
  */
 const SchipholClock = (props: ClockComponentProps): JSX.Element => {
     const { time, clockSettings } = props;
@@ -68,38 +81,53 @@ const SchipholClock = (props: ClockComponentProps): JSX.Element => {
                 aria-label={`Klok: ${time.getHours()} uur ${time.getMinutes()} minuten`}
                 style={{ width: `${sizeFactor}vmin`, maxWidth: '100%', height: 'auto' }}
             >
-                <circle cx={CENTER} cy={CENTER} r='190' fill='none' stroke={shadeColor} strokeWidth='2' />
-                {Array.from({ length: 12 }, (_, index) => (
-                    <line
-                        key={index}
-                        x1={CENTER}
-                        y1='18'
-                        x2={CENTER}
-                        y2={index % 3 === 0 ? 34 : 26}
-                        stroke={shadeColor}
-                        strokeWidth={index % 3 === 0 ? 4 : 2}
-                        transform={`rotate(${index * 30} ${CENTER} ${CENTER})`}
-                    />
-                ))}
+                <defs>
+                    <clipPath id='schiphol-face'>
+                        <circle cx={CENTER} cy={CENTER} r={FACE_RADIUS} />
+                    </clipPath>
+                    <filter id='schiphol-blur' x='-50%' y='-20%' width='200%' height='140%'>
+                        <feGaussianBlur stdDeviation='7' />
+                    </filter>
+                </defs>
+                <circle cx={CENTER} cy={CENTER} r={FACE_RADIUS} fill={shadeColor} />
+                {Array.from({ length: 60 }, (_, index) => {
+                    const isHour = index % 5 === 0;
+                    return (
+                        <line
+                            key={index}
+                            x1={CENTER}
+                            y1={CENTER - FACE_RADIUS + 6}
+                            x2={CENTER}
+                            y2={CENTER - FACE_RADIUS + (isHour ? 30 : 15)}
+                            stroke={foreGroundColor}
+                            strokeWidth={isHour ? 6 : 2}
+                            transform={`rotate(${index * 6} ${CENTER} ${CENTER})`}
+                        />
+                    );
+                })}
                 {previous ? (
                     <g key={run}>
                         <defs>
                             <mask id={`schiphol-old-${run}`}>
                                 <rect x='0' y='0' width='400' height='400' fill='white' />
-                                <rect className='schiphol-wipe-mask' x='0' y='0' width='0' height='400' fill='black' />
+                                <circle className='schiphol-erase-mask' cx={CENTER} cy={CENTER} r='0' fill='black' />
                             </mask>
                             <mask id={`schiphol-new-${run}`}>
-                                <rect className='schiphol-draw-mask' x='400' y='0' width='0' height='400' fill='white' />
+                                <circle className='schiphol-draw-mask' cx={CENTER} cy={CENTER} r='0' fill='white' />
                             </mask>
                         </defs>
+                        <g clipPath='url(#schiphol-face)'>
+                            <g className='schiphol-man' filter='url(#schiphol-blur)' data-testid='schiphol-man'>
+                                <Man />
+                            </g>
+                        </g>
                         <HandShapes hands={previous} color={foreGroundColor} mask={`url(#schiphol-old-${run})`} />
                         <HandShapes hands={hands} color={foreGroundColor} mask={`url(#schiphol-new-${run})`} />
-                        <rect className='schiphol-squeegee-forward' x='-4' y='5' width='8' height='390' rx='3' fill={shadeColor} />
-                        <rect className='schiphol-squeegee-back' x='-4' y='5' width='8' height='390' rx='3' fill={shadeColor} />
                     </g>
                 ) : (
                     <HandShapes hands={hands} color={foreGroundColor} />
                 )}
+                <circle cx={CENTER} cy={CENTER} r='9' fill={foreGroundColor} />
             </svg>
         </Container>
     );
