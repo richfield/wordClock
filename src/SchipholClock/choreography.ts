@@ -4,11 +4,13 @@ export const TIME_SCALE = 1.7;
 export const DURATION = 7500 * TIME_SCALE;
 export const FLOOR = 400;
 // A minifig: stiff, straight arms and blocky legs
-export const ARM_LENGTH = 125;
+export const ARM_LENGTH = 100;
+export const UPPER_ARM = 58;
+export const FOREARM = 58;
 export const TORSO = 96;
 export const SHOULDER_HALF = 68;
 export const SHOULDER_DROP = 82;
-export const LEG = 90;
+export const LEG = 72;
 export const LEG_OFFSET = 27;
 
 const HAND_BACK = 25;
@@ -115,8 +117,19 @@ export const frameAt = (elapsed: number, angles: { hour: number, minute: number 
 
 export interface Arm {
     shoulder: Point,
+    elbow: Point,
     hand: Point
 }
+
+// The elbow sits to the side of the straight line shoulder-hand, which is shorter than the arm so it always bends
+const armTo = (shoulder: Point, along: Point, bend: number): Arm => {
+    const hand = add(shoulder, scale(along, ARM_LENGTH));
+    const alongSquare = UPPER_ARM * UPPER_ARM - FOREARM * FOREARM + ARM_LENGTH * ARM_LENGTH;
+    const back = alongSquare / (2 * ARM_LENGTH);
+    const height = Math.sqrt(Math.max(0, UPPER_ARM * UPPER_ARM - back * back));
+    const elbow = add(shoulder, add(scale(along, back), scale({ x: -along.y, y: along.x }, height * bend)));
+    return { shoulder, elbow, hand };
+};
 
 interface Body {
     hip: Point,
@@ -187,8 +200,8 @@ export const poseAt = (elapsed: number, frame: Frame): Pose => {
         hip: body.hip,
         lean: body.lean,
         feet,
-        working: { shoulder: rightShoulder, hand: add(rightShoulder, scale(rightDirection, ARM_LENGTH)) },
-        resting: { shoulder: leftShoulder, hand: add(leftShoulder, scale(hang(-1, swing * 0.5), ARM_LENGTH)) },
+        working: armTo(rightShoulder, rightDirection, 1),
+        resting: armTo(leftShoulder, hang(-1, swing * 0.5), 1),
         toolRadius: mix(24, 12, frame.tool)
     };
 };

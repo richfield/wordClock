@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useRef } from 'react';
 import { Container } from 'react-bootstrap';
 import { ClockComponentProps } from '../types';
 import { DURATION, LEG_OFFSET, TORSO, frameAt, handSegment, poseAt } from './choreography';
-import { CENTER, HOUR_LENGTH, MINUTE_LENGTH, handAngles, handPath, spiralPath } from './hands';
+import { Point, CENTER, HOUR_LENGTH, MINUTE_LENGTH, handAngles, handPath, spiralPath } from './hands';
 
 const FACE_RADIUS = 192;
 const MAN_COLOR = '#26306a';
@@ -43,8 +43,8 @@ const HandShapes = ({ hands, color, mask }: { hands: Hands, color: string, mask?
 interface ManRefs {
     torso: React.RefObject<SVGGElement>,
     legs: React.RefObject<SVGPathElement>,
-    working: React.RefObject<SVGLineElement>,
-    resting: React.RefObject<SVGLineElement>,
+    working: React.RefObject<SVGPolylineElement>,
+    resting: React.RefObject<SVGPolylineElement>,
     restHand: React.RefObject<SVGCircleElement>,
     tool: React.RefObject<SVGCircleElement>
 }
@@ -53,7 +53,7 @@ interface ManRefs {
 const Man = ({ refs }: { refs: ManRefs }) => (
     <g opacity='0.85'>
         <path ref={refs.legs} fill='none' stroke={LEG_COLOR} strokeWidth='50' strokeLinecap='butt' />
-        <line ref={refs.resting} stroke={ARM_COLOR} strokeWidth='32' strokeLinecap='round' />
+        <polyline ref={refs.resting} fill='none' stroke={ARM_COLOR} strokeWidth='32' strokeLinecap='round' strokeLinejoin='round' />
         <circle ref={refs.restHand} r='17' fill={HAND_COLOR} />
         <g ref={refs.torso}>
             <rect x='-52' y='-26' width='104' height='26' fill={LEG_COLOR} />
@@ -61,7 +61,7 @@ const Man = ({ refs }: { refs: ManRefs }) => (
             <rect x='-38' y={-TORSO - 70} width='76' height='70' rx='20' fill={HEAD_COLOR} />
             <rect x='-15' y={-TORSO - 82} width='30' height='14' rx='5' fill={HEAD_COLOR} />
         </g>
-        <line ref={refs.working} stroke={ARM_COLOR} strokeWidth='32' strokeLinecap='round' />
+        <polyline ref={refs.working} fill='none' stroke={ARM_COLOR} strokeWidth='32' strokeLinecap='round' strokeLinejoin='round' />
         <circle ref={refs.tool} r='24' fill={HAND_COLOR} />
     </g>
 );
@@ -83,8 +83,8 @@ const Wipe = ({ previous, hands, run, color }: WipeProps) => {
     const fadeRef = useRef<SVGGElement>(null);
     const torso = useRef<SVGGElement>(null);
     const legs = useRef<SVGPathElement>(null);
-    const working = useRef<SVGLineElement>(null);
-    const resting = useRef<SVGLineElement>(null);
+    const working = useRef<SVGPolylineElement>(null);
+    const resting = useRef<SVGPolylineElement>(null);
     const restHand = useRef<SVGCircleElement>(null);
     const tool = useRef<SVGCircleElement>(null);
 
@@ -97,6 +97,8 @@ const Wipe = ({ previous, hands, run, color }: WipeProps) => {
         const hour = handSegment(hands.angles.hour, HOUR_LENGTH);
         const minute = handSegment(hands.angles.minute, MINUTE_LENGTH);
 
+        const setArm = (el: SVGElement, arm: { shoulder: Point, elbow: Point, hand: Point }) =>
+            el.setAttribute('points', [ arm.shoulder, arm.elbow, arm.hand ].map(p => `${p.x},${p.y}`).join(' '));
         const setLine = (line: SVGElement, from: { x: number, y: number }, to: { x: number, y: number }, amount: number) => {
             line.setAttribute('x1', String(from.x));
             line.setAttribute('y1', String(from.y));
@@ -114,8 +116,8 @@ const Wipe = ({ previous, hands, run, color }: WipeProps) => {
             torsoEl.setAttribute('transform', `translate(${pose.hip.x} ${pose.hip.y}) rotate(${pose.lean})`);
             const [ left, right ] = pose.feet;
             legsEl.setAttribute('d', `M${pose.hip.x - LEG_OFFSET} ${pose.hip.y} L${left.x} ${left.y} M${pose.hip.x + LEG_OFFSET} ${pose.hip.y} L${right.x} ${right.y}`);
-            setLine(workingEl, pose.working.shoulder, pose.working.hand, 1);
-            setLine(restingEl, pose.resting.shoulder, pose.resting.hand, 1);
+            setArm(workingEl, pose.working);
+            setArm(restingEl, pose.resting);
             restHandEl.setAttribute('cx', String(pose.resting.hand.x));
             restHandEl.setAttribute('cy', String(pose.resting.hand.y));            toolEl.setAttribute('cx', String(pose.working.hand.x));
             toolEl.setAttribute('cy', String(pose.working.hand.y));
