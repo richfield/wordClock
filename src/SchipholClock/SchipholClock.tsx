@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef } from 'react';
 import { Container } from 'react-bootstrap';
 import { ClockComponentProps } from '../types';
-import { DURATION, LEG_OFFSET, TORSO, frameAt, handSegment, poseAt } from './choreography';
+import { BROOM_LENGTH, BRUSH_LENGTH, DURATION, LEG_OFFSET, TORSO, frameAt, handSegment, poseAt } from './choreography';
 import { Point, CENTER, HOUR_LENGTH, MINUTE_LENGTH, handAngles, handPath, spiralPath } from './hands';
 
 const FACE_RADIUS = 192;
@@ -10,10 +10,10 @@ const HEAD_COLOR = '#36427f';
 const LEG_COLOR = '#1a2150';
 const ARM_COLOR = '#222b5f';
 const HAND_COLOR = '#141a40';
-// The broom keeps its length; the hand slides along the pole
-const BROOM_LENGTH = 220;
 const BROOM_HANDLE = '#3a2f2a';
 const BROOM_HEAD = '#4a3b2c';
+const BRISTLES = '#141a40';
+const FERRULE = '#6b7088';
 
 interface Hands {
     hour: string,
@@ -50,10 +50,9 @@ interface ManRefs {
     working: React.RefObject<SVGPolylineElement>,
     resting: React.RefObject<SVGPolylineElement>,
     restHand: React.RefObject<SVGCircleElement>,
-    tool: React.RefObject<SVGCircleElement>,
     broom: React.RefObject<SVGGElement>,
-    pole: React.RefObject<SVGLineElement>,
-    head: React.RefObject<SVGRectElement>
+    sweep: React.RefObject<SVGGElement>,
+    paint: React.RefObject<SVGGElement>
 }
 
 // A blurred Lego minifig behind the frosted screen. The torso is drawn around the hip, everything else in dial coordinates.
@@ -70,10 +69,16 @@ const Man = ({ refs }: { refs: ManRefs }) => (
         </g>
         <polyline ref={refs.working} fill='none' stroke={ARM_COLOR} strokeWidth='32' strokeLinecap='round' strokeLinejoin='round' />
         <g ref={refs.broom}>
-            <line ref={refs.pole} x1='0' y1='0' y2='0' stroke={BROOM_HANDLE} strokeWidth='9' strokeLinecap='round' />
-            <rect ref={refs.head} x='-34' y='-30' width='34' height='60' rx='6' fill={BROOM_HEAD} />
+            <g ref={refs.sweep}>
+                <line x1={-BROOM_LENGTH} y1='0' x2='0' y2='0' stroke={BROOM_HANDLE} strokeWidth='9' strokeLinecap='round' />
+                <rect x='-34' y='-30' width='34' height='60' rx='6' fill={BROOM_HEAD} />
+            </g>
+            <g ref={refs.paint}>
+                <line x1={-BRUSH_LENGTH} y1='0' x2='-30' y2='0' stroke={BROOM_HANDLE} strokeWidth='7' strokeLinecap='round' />
+                <rect x='-46' y='-8' width='18' height='16' fill={FERRULE} />
+                <path d='M-30 -9 L8 -4 L16 0 L8 4 L-30 9 Z' fill={BRISTLES} />
+            </g>
         </g>
-        <circle ref={refs.tool} r='24' fill={HAND_COLOR} />
     </g>
 );
 interface WipeProps {
@@ -97,17 +102,16 @@ const Wipe = ({ previous, hands, run, color }: WipeProps) => {
     const working = useRef<SVGPolylineElement>(null);
     const resting = useRef<SVGPolylineElement>(null);
     const restHand = useRef<SVGCircleElement>(null);
-    const tool = useRef<SVGCircleElement>(null);
     const broom = useRef<SVGGElement>(null);
-    const pole = useRef<SVGLineElement>(null);
-    const head = useRef<SVGRectElement>(null);
+    const sweep = useRef<SVGGElement>(null);
+    const paint = useRef<SVGGElement>(null);
 
     useLayoutEffect(() => {
-        const elements = [ wipeRef, hourRef, minuteRef, fadeRef, torso, legs, working, resting, restHand, tool, broom, pole, head ].map(ref => ref.current);
+        const elements = [ wipeRef, hourRef, minuteRef, fadeRef, torso, legs, working, resting, restHand, broom, sweep, paint ].map(ref => ref.current);
         if (elements.some(element => element === null)) {
             return undefined;
         }
-        const [ wipeEl, hourEl, minuteEl, fadeEl, torsoEl, legsEl, workingEl, restingEl, restHandEl, toolEl, broomEl, poleEl, headEl ] = elements as SVGElement[];
+        const [ wipeEl, hourEl, minuteEl, fadeEl, torsoEl, legsEl, workingEl, restingEl, restHandEl, broomEl, sweepEl, paintEl ] = elements as SVGElement[];
         const hour = handSegment(hands.angles.hour, HOUR_LENGTH);
         const minute = handSegment(hands.angles.minute, MINUTE_LENGTH);
 
@@ -133,17 +137,14 @@ const Wipe = ({ previous, hands, run, color }: WipeProps) => {
             setArm(workingEl, pose.working);
             setArm(restingEl, pose.resting);
             restHandEl.setAttribute('cx', String(pose.resting.hand.x));
-            restHandEl.setAttribute('cy', String(pose.resting.hand.y));            const { tip } = pose;
-            const grip = pose.working.hand;
-            const angle = Math.atan2(tip.y - grip.y, tip.x - grip.x) * 180 / Math.PI;
+            restHandEl.setAttribute('cy', String(pose.resting.hand.y));
+            const { tip } = pose;
+            const { shoulder } = pose.working;
+            const angle = Math.atan2(tip.y - shoulder.y, tip.x - shoulder.x) * 180 / Math.PI;
             broomEl.setAttribute('transform', `translate(${tip.x} ${tip.y}) rotate(${angle})`);
             broomEl.setAttribute('opacity', String(frame.engage > 0 ? 1 : 0));
-            poleEl.setAttribute('x2', String(-BROOM_LENGTH));
-            headEl.setAttribute('opacity', String(1 - frame.tool));
-            toolEl.setAttribute('cx', String(tip.x));
-            toolEl.setAttribute('cy', String(tip.y));
-            toolEl.setAttribute('r', String(pose.toolRadius));
-            toolEl.setAttribute('opacity', String(frame.tool));
+            sweepEl.setAttribute('opacity', String(1 - frame.tool));
+            paintEl.setAttribute('opacity', String(frame.tool));
         };
 
         if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
@@ -179,7 +180,7 @@ const Wipe = ({ previous, hands, run, color }: WipeProps) => {
             </defs>
             <g clipPath='url(#schiphol-face)'>
                 <g ref={fadeRef} filter='url(#schiphol-blur)' opacity='0' data-testid='schiphol-man'>
-                    <Man refs={{ torso, legs, working, resting, restHand, tool, broom, pole, head }} />
+                    <Man refs={{ torso, legs, working, resting, restHand, broom, sweep, paint }} />
                 </g>
             </g>
             <HandShapes hands={previous} color={color} mask={`url(#schiphol-old-${run})`} />
