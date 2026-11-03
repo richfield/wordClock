@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { findActiveSchedule, isTimeInRange, parseTime, secondsUntil, validateSchedule } from './schedule';
+import { findActiveSchedule, isTimeInRange, parseTime, secondsUntil, sortSchedule, validateSchedule } from './schedule';
 import { ClockSettings, ScheduleEntry } from './types';
 
 const at = (time: string, seconds = 0) => {
@@ -131,5 +131,17 @@ describe('validateSchedule', () => {
         expect(errors[ 0 ].clockType).toBeDefined();
         expect(errors[ 1 ]).toEqual({});
         expect(errors[ 2 ]).toEqual({ fromTime: 'Ongeldige tijd' });
+    });
+});
+
+describe('sortSchedule', () => {
+    it('orders by start time, keeps ties in order and puts invalid times last', () => {
+        const result = sortSchedule([ { fromTime: '22:30' }, { fromTime: '' }, { fromTime: '07:00', toTime: 'a' }, { fromTime: '07:00', toTime: 'b' }, { fromTime: '15:00' } ]);
+        expect(result.map(item => item.fromTime)).toEqual([ '07:00', '07:00', '15:00', '22:30', '' ]);
+        expect(result[ 0 ].toTime).toBe('a');
+    });
+
+    it('handles a missing schedule', () => {
+        expect(sortSchedule(undefined)).toEqual([]);
     });
 });

@@ -22,6 +22,10 @@ export const isTimeInRange = (now: Date, from: string, to: string): boolean => {
     return start < end ? current >= start && current < end : current >= start || current < end;
 };
 
+/** Orders entries by start time; entries without a valid start stay at the end. The sort is stable. */
+export const sortSchedule = <T extends Partial<ScheduleEntry>>(schedule: T[] | undefined): T[] =>
+    [ ...(schedule ?? []) ].sort((a, b) =>
+        (parseTime(a?.fromTime) ?? Infinity) - (parseTime(b?.fromTime) ?? Infinity) || 0);
 /** The last matching entry wins, so later schedules override earlier ones. Disabled entries are skipped. */
 export const findActiveSchedule = (
     schedule: ScheduleEntry[] | undefined,

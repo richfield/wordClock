@@ -22,7 +22,7 @@ import { ClockSettings } from '../ClockSettings/ClockSettings';
 import { faGear } from '@fortawesome/free-solid-svg-icons';
 import { get } from 'lodash';
 import { TimerSettings } from './TimerSettings';
-import { validateSchedule } from '../schedule';
+import { sortSchedule, validateSchedule } from '../schedule';
 import { getErrorMessage } from '../helpers';
 
 const validate = (values: Settings) => {
@@ -54,7 +54,8 @@ const SettingsComponent = () => {
     const [ settings, setSettings ] = useState<Settings>();
     const [ saveError, setSaveError ] = useState<string>();
     const [ saved, setSaved ] = useState(false);
-    async function onSubmit(values: Settings, form: any) {
+    async function onSubmit(submitted: Settings, form: any) {
+        const values = { ...submitted, Schedule: sortSchedule(submitted.Schedule) };
         setSaveError(undefined);
         setSaved(false);
         try {
@@ -143,7 +144,8 @@ const SettingsComponent = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                setSettings(await SettingsService.getSettings());
+                const loaded = await SettingsService.getSettings();
+                setSettings({ ...loaded, Schedule: sortSchedule(loaded.Schedule) });
             } catch (error) {
                 if (!localStorage.getItem('token')) {
                     navigate('/login');
