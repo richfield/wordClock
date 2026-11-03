@@ -4,15 +4,15 @@ export const TIME_SCALE = 1.7;
 export const DURATION = 7500 * TIME_SCALE;
 export const FLOOR = 400;
 // A minifig: stiff, straight arms and blocky legs
-export const ARM_LENGTH = 100;
-export const UPPER_ARM = 58;
-export const FOREARM = 58;
+export const ARM_LENGTH = 86;
+export const UPPER_ARM = 50;
+export const FOREARM = 50;
 export const TORSO = 96;
 export const SHOULDER_HALF = 68;
 export const SHOULDER_DROP = 82;
-export const LEG = 72;
+export const LEG = 90;
 // Stubby minifig legs while working, so he floats behind the glass instead of having long legs
-const LEG_WORK = 62;
+const LEG_WORK = 90;
 export const LEG_OFFSET = 27;
 
 const HAND_BACK = 25;
@@ -204,6 +204,6 @@ export const poseAt = (elapsed: number, frame: Frame): Pose => {
         feet,
         working: armTo(rightShoulder, rightDirection, 1),
         resting: armTo(leftShoulder, hang(-1, swing * 0.5), 1),
-        toolRadius: mix(24, 12, frame.tool)
+        toolRadius: mix(17, 12, frame.tool)
     };
 };
