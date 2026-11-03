@@ -52,16 +52,16 @@ interface ManRefs {
 // A blurred Lego minifig behind the frosted screen. The torso is drawn around the hip, everything else in dial coordinates.
 const Man = ({ refs }: { refs: ManRefs }) => (
     <g opacity='0.85'>
-        <path ref={refs.legs} fill='none' stroke={LEG_COLOR} strokeWidth='38' strokeLinecap='butt' />
-        <line ref={refs.resting} stroke={ARM_COLOR} strokeWidth='32' strokeLinecap='butt' />
+        <path ref={refs.legs} fill='none' stroke={LEG_COLOR} strokeWidth='50' strokeLinecap='butt' />
+        <line ref={refs.resting} stroke={ARM_COLOR} strokeWidth='32' strokeLinecap='round' />
         <circle ref={refs.restHand} r='17' fill={HAND_COLOR} />
         <g ref={refs.torso}>
-            <rect x='-46' y='-26' width='92' height='26' fill={LEG_COLOR} />
-            <rect x='-46' y={-TORSO} width='92' height={TORSO - 26} fill={MAN_COLOR} />
-            <rect x='-28' y={-TORSO - 56} width='56' height='56' rx='18' fill={HEAD_COLOR} />
-            <rect x='-12' y={-TORSO - 68} width='24' height='14' rx='5' fill={HEAD_COLOR} />
+            <rect x='-52' y='-26' width='104' height='26' fill={LEG_COLOR} />
+            <rect x='-52' y={-TORSO} width='104' height={TORSO - 26} fill={MAN_COLOR} />
+            <rect x='-38' y={-TORSO - 70} width='76' height='70' rx='20' fill={HEAD_COLOR} />
+            <rect x='-15' y={-TORSO - 82} width='30' height='14' rx='5' fill={HEAD_COLOR} />
         </g>
-        <line ref={refs.working} stroke={ARM_COLOR} strokeWidth='32' strokeLinecap='butt' />
+        <line ref={refs.working} stroke={ARM_COLOR} strokeWidth='32' strokeLinecap='round' />
         <circle ref={refs.tool} r='24' fill={HAND_COLOR} />
     </g>
 );

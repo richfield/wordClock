@@ -4,12 +4,12 @@ export const TIME_SCALE = 1.7;
 export const DURATION = 7500 * TIME_SCALE;
 export const FLOOR = 400;
 // A minifig: stiff, straight arms and blocky legs
-export const ARM_LENGTH = 140;
-export const TORSO = 80;
-export const SHOULDER_HALF = 56;
-export const SHOULDER_DROP = 66;
-export const LEG = 100;
-export const LEG_OFFSET = 22;
+export const ARM_LENGTH = 125;
+export const TORSO = 96;
+export const SHOULDER_HALF = 68;
+export const SHOULDER_DROP = 82;
+export const LEG = 90;
+export const LEG_OFFSET = 27;
 
 const HAND_BACK = 25;
 const ENTER_X = -70;
