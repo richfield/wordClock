@@ -10,6 +10,8 @@ const HEAD_COLOR = '#36427f';
 const LEG_COLOR = '#1a2150';
 const ARM_COLOR = '#222b5f';
 const HAND_COLOR = '#141a40';
+// The broom keeps its length; the hand slides along the pole
+const BROOM_LENGTH = 220;
 const BROOM_HANDLE = '#3a2f2a';
 const BROOM_HEAD = '#4a3b2c';
 
@@ -83,7 +85,7 @@ interface WipeProps {
 
 /**
  * The man wipes the old hands away in a spiral with a cloth, then paints the new hands.
- * His body follows his hand so the arm keeps the same length.
+ * He stands still and reaches with a broom of fixed length.
  */
 const Wipe = ({ previous, hands, run, color }: WipeProps) => {
     const wipeRef = useRef<SVGPathElement>(null);
@@ -133,11 +135,10 @@ const Wipe = ({ previous, hands, run, color }: WipeProps) => {
             restHandEl.setAttribute('cx', String(pose.resting.hand.x));
             restHandEl.setAttribute('cy', String(pose.resting.hand.y));            const { tip } = pose;
             const grip = pose.working.hand;
-            const length = Math.hypot(tip.x - grip.x, tip.y - grip.y) + 40;
             const angle = Math.atan2(tip.y - grip.y, tip.x - grip.x) * 180 / Math.PI;
             broomEl.setAttribute('transform', `translate(${tip.x} ${tip.y}) rotate(${angle})`);
             broomEl.setAttribute('opacity', String(frame.engage > 0 ? 1 : 0));
-            poleEl.setAttribute('x2', String(-length));
+            poleEl.setAttribute('x2', String(-BROOM_LENGTH));
             headEl.setAttribute('opacity', String(1 - frame.tool));
             toolEl.setAttribute('cx', String(tip.x));
             toolEl.setAttribute('cy', String(tip.y));
