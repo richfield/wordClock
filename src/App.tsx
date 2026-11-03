@@ -30,7 +30,8 @@ function App(): JSX.Element {
 
   const { ForceReload, RefreshRate } = settings;
   const needsRefresh = RefreshRate > 0 && time.getUTCSeconds() % RefreshRate === 0;
-  const needsReload = time.getUTCMinutes() % 60 === 0 && time.getSeconds() === 2;
+  // Reload once a night (not hourly) so a new deploy is picked up without visible flicker
+  const needsReload = time.getHours() === 4 && time.getMinutes() === 0 && time.getSeconds() === 2;
 
   const needsTimer = (settings: Settings): { isActive: boolean, timer: number } => {
     const found = findActiveSchedule(settings.Schedule, new Date(), item => item.clockType === 'countdown');
