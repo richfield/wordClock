@@ -214,7 +214,7 @@ export const poseAt = (elapsed: number, frame: Frame): Pose => {
     const leftShoulder = shoulderOf(body, -1);
     const stretch = clamp((body.hip.y - (FLOOR - LEG)) / 60, 0, 1.3);
     const feet = ([ -1, 1 ] as const).map(side => ({
-        x: body.hip.x + side * (12 + stretch * 8) + side * swing * 16,
+        x: body.hip.x + side * (14 + stretch * 8) + side * swing * 16,
         y: FLOOR - Math.max(0, -side * Math.sin(phase)) * walking * 10
     })) as [ Point, Point ];
 
