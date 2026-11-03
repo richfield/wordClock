@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ARM_LENGTH, DURATION, TIME_SCALE, FLOOR, frameAt, handSegment, poseAt } from './choreography';
+import { BRUSH_LENGTH, ARM_LENGTH, DURATION, TIME_SCALE, FLOOR, frameAt, handSegment, poseAt } from './choreography';
 import { HOUR_LENGTH, spiralPoint } from './hands';
 
 const angles = { hour: 90, minute: 180 };
@@ -55,7 +55,7 @@ describe('poseAt', () => {
         cases.forEach(testAngles => {
             [ 0, DURATION ].forEach(elapsed => {
                 const pose = poseAt(elapsed, frameAt(elapsed, testAngles));
-                expect(distance(pose.tip, pose.working.hand)).toBeLessThanOrEqual(60 + 1e-6);
+                expect(distance(pose.tip, pose.working.hand)).toBeLessThanOrEqual(BRUSH_LENGTH + 1e-6);
                 expect(pose.tip.y).toBeLessThanOrEqual(FLOOR);
             });
         });

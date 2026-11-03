@@ -21,8 +21,11 @@ const HAND_BACK = 25;
 const ENTER_X = -130;
 // While wiping with the long broom he stays here; for painting he walks along with the brush
 const STAND_X = 30;
-const PAINT_DISTANCE = 148;
+const PAINT_DISTANCE = 120;
 const CARRY_TIP = 60;
+// The brush is held at the very end of its handle, the broom a bit further along
+const BRUSH_GRIP = BRUSH_LENGTH - 8;
+const handReach = (distance: number, tool: number): number => mix(distance * 0.6, distance - BRUSH_GRIP, tool);
 const PAINT_MIN_X = 0;
 const PAINT_MAX_X = 300;
 const STRIDE = 34;
@@ -170,7 +173,7 @@ export const poseAt = (elapsed: number, frame: Frame): Pose => {
     const rightShoulder = shoulderOf(hip, 1);
     const toTip = sub(frame.hand, rightShoulder);
     const rightDirection = direction(lerp(hang(1, -swing * 0.5), direction(toTip), engage));
-    const reach = mix(ARM_LENGTH, clamp(Math.hypot(toTip.x, toTip.y) * 0.6, 40, ARM_LENGTH), engage);
+    const reach = mix(ARM_LENGTH, clamp(handReach(Math.hypot(toTip.x, toTip.y), frame.tool), 40, ARM_LENGTH), engage);
 
     const feet = ([ -1, 1 ] as const).map(side => ({
         x: hip.x + side * LEG_OFFSET + side * swing * 26,
@@ -179,7 +182,7 @@ export const poseAt = (elapsed: number, frame: Frame): Pose => {
 
     const working = armTo(rightShoulder, rightDirection, reach);
     // Before and after the work he carries the tool like a staff
-    const carried = add(working.hand, scale(rightDirection, CARRY_TIP));
+    const carried = add(working.hand, scale(rightDirection, mix(CARRY_TIP, BRUSH_GRIP, frame.tool)));
 
     return {
         hip,
