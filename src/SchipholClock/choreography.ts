@@ -1,6 +1,7 @@
 import { CENTER, HOUR_LENGTH, MINUTE_LENGTH, Point, spiralPoint, tipPoint } from './hands';
 
-export const DURATION = 7500;
+export const TIME_SCALE = 1.7;
+export const DURATION = 7500 * TIME_SCALE;
 export const FLOOR = 385;
 export const UPPER_ARM = 66;
 export const FORE_ARM = 66;
@@ -13,24 +14,26 @@ const HAND_BACK = 25;
 const ENTER_X = -50;
 const STAND_X = 110;
 const MAX_REACH = ARM_LENGTH * 0.94;
-const STEP_SPEED = 160;
+const STEP_SPEED = 300;
+
+const scaled = (start: number, end: number) => [ start * TIME_SCALE, end * TIME_SCALE ] as const;
 
 const TIMES = {
-    engage: [ 600, 1500 ],
-    wipe: [ 1500, 3700 ],
-    toHour: [ 3700, 4300 ],
-    hour: [ 4300, 5100 ],
-    toMinute: [ 5100, 5700 ],
-    minute: [ 5700, 6500 ],
-    disengage: [ 6500, 7300 ],
-    walkIn: [ 0, 1500 ],
-    walkOut: [ 6500, DURATION ]
+    engage: scaled(600, 1500),
+    wipe: scaled(1500, 3700),
+    toHour: scaled(3700, 4300),
+    hour: scaled(4300, 5100),
+    toMinute: scaled(5100, 5700),
+    minute: scaled(5700, 6500),
+    disengage: scaled(6500, 7300),
+    walkIn: scaled(0, 1500),
+    walkOut: scaled(6500, 7500)
 } as const;
 
 type Range = readonly [ number, number ];
 
 const clamp = (value: number, min = 0, max = 1) => Math.min(max, Math.max(min, value));
-const ease = (x: number) => (x < 0.5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2);
+const ease = (x: number) => (1 - Math.cos(Math.PI * x)) / 2;
 const progress = (elapsed: number, [ start, end ]: Range) => ease(clamp((elapsed - start) / (end - start)));
 const mix = (from: number, to: number, amount: number) => from + (to - from) * amount;
 const lerp = (from: Point, to: Point, amount: number): Point => ({ x: mix(from.x, to.x, amount), y: mix(from.y, to.y, amount) });
@@ -97,7 +100,7 @@ export const frameAt = (elapsed: number, angles: { hour: number, minute: number 
         wipe,
         hour: hourDone,
         minute: minuteDone,
-        opacity: clamp(Math.min(elapsed / 500, (DURATION - elapsed) / 500)),
+        opacity: clamp(Math.min(elapsed / 800, (DURATION - elapsed) / 800)),
         engage: progress(elapsed, TIMES.engage) * (1 - progress(elapsed, TIMES.disengage)),
         tool: progress(elapsed, TIMES.toHour)
     };
@@ -188,7 +191,7 @@ export const poseAt = (elapsed: number, frame: Frame): Pose => {
     const idle: Body = { hip: { x: idleX, y: FLOOR - LEG - Math.abs(Math.sin(phase)) * 3 * walking }, lean: 0 };
     const work = workingBody(frame.hand);
 
-    const sway = Math.sin(elapsed / 600) * 1.2 * engage;
+    const sway = (Math.sin(elapsed / 900) * 1.2 + Math.sin(elapsed / 370) * 0.5) * engage;
     const body: Body = {
         hip: lerp(idle.hip, work.hip, engage),
         lean: work.lean * engage + sway
@@ -217,3 +220,4 @@ export const poseAt = (elapsed: number, frame: Frame): Pose => {
         toolRadius: mix(20, 9, frame.tool)
     };
 };
+

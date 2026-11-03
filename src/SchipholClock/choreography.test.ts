@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ARM_LENGTH, DURATION, FLOOR, UPPER_ARM, frameAt, handSegment, poseAt, solveArm } from './choreography';
+import { ARM_LENGTH, DURATION, TIME_SCALE, FLOOR, UPPER_ARM, frameAt, handSegment, poseAt, solveArm } from './choreography';
 import { HOUR_LENGTH, spiralPoint } from './hands';
 
 const angles = { hour: 90, minute: 180 };
@@ -12,18 +12,18 @@ describe('frameAt', () => {
     });
 
     it('follows the spiral while wiping', () => {
-        const middle = frameAt(2600, angles);
+        const middle = frameAt(2600 * TIME_SCALE, angles);
         expect(middle.wipe).toBeGreaterThan(0);
         expect(middle.wipe).toBeLessThan(1);
         expect(distance(middle.hand, spiralPoint(middle.wipe))).toBeLessThan(1e-6);
     });
 
     it('paints the hour hand before the minute hand, ending at the tip', () => {
-        const hourDone = frameAt(5100, angles);
+        const hourDone = frameAt(5100 * TIME_SCALE, angles);
         expect(hourDone.hour).toBe(1);
         expect(hourDone.minute).toBe(0);
         expect(distance(hourDone.hand, handSegment(90, HOUR_LENGTH).tip)).toBeLessThan(1e-6);
-        expect(frameAt(6500, angles).minute).toBe(1);
+        expect(frameAt(6500 * TIME_SCALE, angles).minute).toBe(1);
     });
 
     it('is fully at work between walking in and walking out', () => {
@@ -79,10 +79,11 @@ describe('poseAt', () => {
     });
 
     it('does not slide sideways further than needed: he is on the dial while working', () => {
-        for (let elapsed = 1500; elapsed <= 6500; elapsed += 100) {
+        for (let elapsed = 1500 * TIME_SCALE; elapsed <= 6500 * TIME_SCALE; elapsed += 100) {
             const pose = poseAt(elapsed, frameAt(elapsed, angles));
             expect(pose.hip.x).toBeGreaterThan(40);
             expect(pose.hip.x).toBeLessThan(360);
         }
     });
 });
+
