@@ -11,18 +11,13 @@ export const TORSO = 96;
 export const SHOULDER_HALF = 68;
 export const SHOULDER_DROP = 82;
 export const LEG = 90;
-// Stubby minifig legs while working, so he floats behind the glass instead of having long legs
-const LEG_WORK = 90;
 export const LEG_OFFSET = 27;
 
-// Where he grips the broom handle, relative to the bristles; leaning back towards his body
-export const BROOM_GRIP: Point = { x: -34, y: -70 };
-
 const HAND_BACK = 25;
-const ENTER_X = -70;
-const STAND_X = 110;
+const ENTER_X = -130;
+// He stays here while working: the broom is an extension of his arm, so he never has to move across the dial
+const STAND_X = 30;
 const STRIDE = 34;
-const MIN_SHOULDER_X = 60;
 
 const scaled = (start: number, end: number) => [ start * TIME_SCALE, end * TIME_SCALE ] as const;
 
@@ -51,15 +46,6 @@ const scale = (a: Point, factor: number): Point => ({ x: a.x * factor, y: a.y * 
 const direction = (a: Point): Point => {
     const length = Math.hypot(a.x, a.y);
     return length > 1e-6 ? scale(a, 1 / length) : { x: 0, y: 1 };
-};
-
-// Positive angles turn clockwise on screen
-const rotate = (vector: Point, degrees: number): Point => {
-    const radians = degrees * Math.PI / 180;
-    return {
-        x: vector.x * Math.cos(radians) - vector.y * Math.sin(radians),
-        y: vector.x * Math.sin(radians) + vector.y * Math.cos(radians)
-    };
 };
 
 export interface HandSegment {
@@ -126,23 +112,16 @@ export interface Arm {
     hand: Point
 }
 
-// The elbow sits to the side of the straight line shoulder-hand, which is shorter than the arm so it always bends
-const armTo = (shoulder: Point, along: Point, bend: number): Arm => {
-    const hand = add(shoulder, scale(along, ARM_LENGTH));
-    const alongSquare = UPPER_ARM * UPPER_ARM - FOREARM * FOREARM + ARM_LENGTH * ARM_LENGTH;
-    const back = alongSquare / (2 * ARM_LENGTH);
+// The elbow sits below the straight line shoulder-hand; the closer the hand, the more the arm bends
+const armTo = (shoulder: Point, along: Point, reach: number): Arm => {
+    const hand = add(shoulder, scale(along, reach));
+    const back = reach / 2;
     const height = Math.sqrt(Math.max(0, UPPER_ARM * UPPER_ARM - back * back));
-    const elbow = add(shoulder, add(scale(along, back), scale({ x: -along.y, y: along.x }, height * bend)));
+    const elbow = add(shoulder, add(scale(along, back), scale({ x: -along.y, y: along.x }, height)));
     return { shoulder, elbow, hand };
 };
 
-interface Body {
-    hip: Point,
-    lean: number
-}
-
-const shoulderOf = ({ hip, lean }: Body, side: number): Point =>
-    add(hip, rotate({ x: side * SHOULDER_HALF, y: -SHOULDER_DROP }, lean));
+const shoulderOf = (hip: Point, side: number): Point => add(hip, { x: side * SHOULDER_HALF, y: -SHOULDER_DROP });
 
 const idleXAt = (elapsed: number): number => elapsed < TIMES.walkOut[ 0 ]
     ? mix(ENTER_X, STAND_X, progress(elapsed, TIMES.walkIn))
@@ -153,61 +132,44 @@ const walkedDistance = (elapsed: number): number => elapsed < TIMES.walkOut[ 0 ]
     ? idleXAt(elapsed) - ENTER_X
     : STAND_X - ENTER_X + STAND_X - idleXAt(elapsed);
 
-/**
- * Where the minifig stands to reach a target with its rigid right arm: upright, to the left of the target,
- * with the arm raised or lowered to the height of the target.
- */
-export const workingBody = (target: Point): Body => {
-    // Raise the arm further when the target is so far left that the body would leave the dial
-    const comfortable = clamp((230 - target.y) / 120, -1, 1) * 60 * Math.PI / 180;
-    const angle = Math.max(comfortable, Math.acos(clamp((target.x - MIN_SHOULDER_X) / ARM_LENGTH)));
-    const shoulder = {
-        x: target.x - ARM_LENGTH * Math.cos(angle),
-        y: target.y + ARM_LENGTH * Math.sin(angle)
-    };
-    return { hip: { x: shoulder.x - SHOULDER_HALF, y: shoulder.y + SHOULDER_DROP }, lean: 0 };
-};
 export interface Pose {
     hip: Point,
-    lean: number,
     feet: [ Point, Point ],
     working: Arm,
     resting: Arm,
+    // The end of the broom or brush, which is the point on the dial that is being worked on
+    tip: Point,
     toolRadius: number
 }
 
 /**
- * The whole figure at a moment: walking in and out, then working on the dial.
+ * The whole figure at a moment: walking in and out, then standing still while the broom in his hand reaches across the dial.
  */
 export const poseAt = (elapsed: number, frame: Frame): Pose => {
     const { engage } = frame;
-    const idleX = idleXAt(elapsed);
     const speed = Math.abs(idleXAt(elapsed + 20) - idleXAt(elapsed - 20)) / 40;
     const walking = clamp(speed / 0.04);
     const phase = walkedDistance(elapsed) / STRIDE * Math.PI;
     const swing = Math.sin(phase) * walking;
-    const idleHip: Point = { x: idleX, y: FLOOR - LEG - Math.abs(Math.sin(phase)) * 5 * walking };
-    const grip = add(frame.hand, scale(BROOM_GRIP, 1 - frame.tool));
-    const work = workingBody(grip);
-    const body: Body = { hip: lerp(idleHip, work.hip, engage), lean: work.lean * engage };
+    const hip: Point = { x: idleXAt(elapsed), y: FLOOR - LEG - Math.abs(Math.sin(phase)) * 5 * walking };
 
     const hang = (side: number, swingAmount: number): Point => direction({ x: side * 0.12 + swingAmount, y: 1 });
-    const rightShoulder = shoulderOf(body, 1);
-    const leftShoulder = shoulderOf(body, -1);
-    const reach = direction(sub(grip, rightShoulder));
-    const rightDirection = direction(lerp(hang(1, -swing * 0.5), reach, engage));
+    const rightShoulder = shoulderOf(hip, 1);
+    const toTip = sub(frame.hand, rightShoulder);
+    const rightDirection = direction(lerp(hang(1, -swing * 0.5), direction(toTip), engage));
+    const reach = mix(ARM_LENGTH, clamp(Math.hypot(toTip.x, toTip.y) * 0.6, 40, ARM_LENGTH), engage);
 
     const feet = ([ -1, 1 ] as const).map(side => ({
-        x: body.hip.x + side * LEG_OFFSET + side * swing * 26,
-        y: mix(FLOOR, body.hip.y + LEG_WORK, engage) - Math.max(0, -side * Math.sin(phase)) * walking * 14
+        x: hip.x + side * LEG_OFFSET + side * swing * 26,
+        y: FLOOR - Math.max(0, -side * Math.sin(phase)) * walking * 14
     })) as [ Point, Point ];
 
     return {
-        hip: body.hip,
-        lean: body.lean,
+        hip,
         feet,
-        working: armTo(rightShoulder, rightDirection, 1),
-        resting: armTo(leftShoulder, hang(-1, swing * 0.5), 1),
+        working: armTo(rightShoulder, rightDirection, reach),
+        resting: armTo(shoulderOf(hip, -1), hang(-1, swing * 0.5), ARM_LENGTH),
+        tip: frame.hand,
         toolRadius: mix(17, 12, frame.tool)
     };
 };

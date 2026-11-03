@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ARM_LENGTH, BROOM_GRIP, DURATION, TIME_SCALE, FLOOR, frameAt, handSegment, poseAt } from './choreography';
+import { ARM_LENGTH, DURATION, TIME_SCALE, FLOOR, frameAt, handSegment, poseAt } from './choreography';
 import { HOUR_LENGTH, spiralPoint } from './hands';
 
 const angles = { hour: 90, minute: 180 };
@@ -34,24 +34,19 @@ describe('frameAt', () => {
 describe('poseAt', () => {
     const cases = [ { hour: 90, minute: 180 }, { hour: 0, minute: 0 }, { hour: 300, minute: 270 }, { hour: 180, minute: 355 }, { hour: 30, minute: 90 } ];
 
-    it('keeps the working hand on the cloth and the brush the whole time it works', () => {
+    it('keeps the tip of the broom on the cloth and the brush the whole time it works', () => {
         cases.forEach(testAngles => {
             for (let elapsed = 0; elapsed <= DURATION; elapsed += 50) {
                 const frame = frameAt(elapsed, testAngles);
-                if (frame.engage === 1) {
-                    const pose = poseAt(elapsed, frame);
-                    expect(distance(pose.working.hand, { x: frame.hand.x + BROOM_GRIP.x * (1 - frame.tool), y: frame.hand.y + BROOM_GRIP.y * (1 - frame.tool) })).toBeLessThan(0.5);
-                }
+                expect(distance(poseAt(elapsed, frame).tip, frame.hand)).toBeLessThan(1e-6);
             }
         });
     });
 
-    it('keeps the rigid arms exactly the same length', () => {
+    it('keeps the resting arm the same length', () => {
         for (let elapsed = 0; elapsed <= DURATION; elapsed += 100) {
             const pose = poseAt(elapsed, frameAt(elapsed, angles));
-            [ pose.working, pose.resting ].forEach(arm => {
-                expect(distance(arm.shoulder, arm.hand)).toBeCloseTo(ARM_LENGTH, 4);
-            });
+            expect(distance(pose.resting.shoulder, pose.resting.hand)).toBeCloseTo(ARM_LENGTH, 4);
         }
     });
     it('keeps the feet on the floor while working', () => {
@@ -59,11 +54,10 @@ describe('poseAt', () => {
         pose.feet.forEach(foot => expect(foot.y).toBeLessThanOrEqual(FLOOR));
     });
 
-    it('does not slide sideways further than needed: he is on the dial while working', () => {
+    it('stands still while working: the broom does the reaching', () => {
+        const first = poseAt(1500 * TIME_SCALE, frameAt(1500 * TIME_SCALE, angles)).hip.x;
         for (let elapsed = 1500 * TIME_SCALE; elapsed <= 6500 * TIME_SCALE; elapsed += 100) {
-            const pose = poseAt(elapsed, frameAt(elapsed, angles));
-            expect(pose.hip.x).toBeGreaterThan(-50);
-            expect(pose.hip.x).toBeLessThan(360);
+            expect(poseAt(elapsed, frameAt(elapsed, angles)).hip.x).toBeCloseTo(first, 6);
         }
     });
 });
