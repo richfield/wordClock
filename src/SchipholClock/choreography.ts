@@ -15,7 +15,7 @@ export const LEG_OFFSET = 27;
 
 // Both tools are extensions of his arm; the hand slides along the handle
 export const BROOM_LENGTH = 220;
-export const BRUSH_LENGTH = 170;
+export const BRUSH_LENGTH = 85;
 
 const HAND_BACK = 25;
 const ENTER_X = -130;
