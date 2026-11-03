@@ -1,32 +1,49 @@
 import { CENTER, HOUR_LENGTH, MINUTE_LENGTH, Point, spiralPoint, tipPoint } from './hands';
 
-export const DURATION = 7000;
-export const ARM_LENGTH = 105;
+export const DURATION = 7500;
+export const FLOOR = 385;
+export const UPPER_ARM = 66;
+export const FORE_ARM = 66;
+export const ARM_LENGTH = UPPER_ARM + FORE_ARM;
+export const TORSO = 92;
+export const SHOULDER_HALF = 30;
+export const LEG = 118;
 
-const IDLE: Point = { x: 70, y: 262 };
 const HAND_BACK = 25;
-const SHOULDER_SIDE = 28;
-const SHOULDER_HEIGHT = 18;
-const SIDE_RANGE = 120;
-const MAX_ARM_ANGLE = 100 * Math.PI / 180;
+const ENTER_X = -50;
+const STAND_X = 110;
+const MAX_REACH = ARM_LENGTH * 0.94;
+const STEP_SPEED = 160;
 
 const TIMES = {
-    toSpiral: [ 700, 1300 ],
-    wipe: [ 1300, 3500 ],
-    toHour: [ 3500, 4100 ],
-    hour: [ 4100, 4900 ],
-    toMinute: [ 4900, 5500 ],
-    minute: [ 5500, 6300 ],
-    leave: [ 6300, DURATION ]
+    engage: [ 600, 1500 ],
+    wipe: [ 1500, 3700 ],
+    toHour: [ 3700, 4300 ],
+    hour: [ 4300, 5100 ],
+    toMinute: [ 5100, 5700 ],
+    minute: [ 5700, 6500 ],
+    disengage: [ 6500, 7300 ],
+    walkIn: [ 0, 1500 ],
+    walkOut: [ 6500, DURATION ]
 } as const;
 
-const clamp = (value: number) => Math.min(1, Math.max(0, value));
+type Range = readonly [ number, number ];
+
+const clamp = (value: number, min = 0, max = 1) => Math.min(max, Math.max(min, value));
 const ease = (x: number) => (x < 0.5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2);
-const lerp = (from: Point, to: Point, amount: number): Point => ({
-    x: from.x + (to.x - from.x) * amount,
-    y: from.y + (to.y - from.y) * amount
-});
-const progress = (elapsed: number, [ start, end ]: readonly [ number, number ]) => ease(clamp((elapsed - start) / (end - start)));
+const progress = (elapsed: number, [ start, end ]: Range) => ease(clamp((elapsed - start) / (end - start)));
+const mix = (from: number, to: number, amount: number) => from + (to - from) * amount;
+const lerp = (from: Point, to: Point, amount: number): Point => ({ x: mix(from.x, to.x, amount), y: mix(from.y, to.y, amount) });
+const add = (a: Point, b: Point): Point => ({ x: a.x + b.x, y: a.y + b.y });
+
+// Positive angles turn clockwise on screen
+const rotate = (vector: Point, degrees: number): Point => {
+    const radians = degrees * Math.PI / 180;
+    return {
+        x: vector.x * Math.cos(radians) - vector.y * Math.sin(radians),
+        y: vector.x * Math.sin(radians) + vector.y * Math.cos(radians)
+    };
+};
 
 export interface HandSegment {
     start: Point,
@@ -43,11 +60,13 @@ export interface Frame {
     wipe: number,
     hour: number,
     minute: number,
-    opacity: number
+    opacity: number,
+    engage: number,
+    tool: number
 }
 
 /**
- * Where the man's hand is, and how far the wiping and painting have come, at a moment in the animation.
+ * Where the man's hand has to be, and how far the wiping and painting have come, at a moment in the animation.
  */
 export const frameAt = (elapsed: number, angles: { hour: number, minute: number }): Frame => {
     const hour = handSegment(angles.hour, HOUR_LENGTH);
@@ -58,7 +77,7 @@ export const frameAt = (elapsed: number, angles: { hour: number, minute: number 
 
     let hand: Point;
     if (elapsed < TIMES.wipe[ 0 ]) {
-        hand = lerp(IDLE, spiralPoint(0), progress(elapsed, TIMES.toSpiral));
+        hand = spiralPoint(0);
     } else if (elapsed < TIMES.wipe[ 1 ]) {
         hand = spiralPoint(wipe);
     } else if (elapsed < TIMES.hour[ 0 ]) {
@@ -70,7 +89,7 @@ export const frameAt = (elapsed: number, angles: { hour: number, minute: number 
     } else if (elapsed < TIMES.minute[ 1 ]) {
         hand = lerp(minute.start, minute.tip, minuteDone);
     } else {
-        hand = lerp(minute.tip, IDLE, progress(elapsed, TIMES.leave));
+        hand = minute.tip;
     }
 
     return {
@@ -78,30 +97,123 @@ export const frameAt = (elapsed: number, angles: { hour: number, minute: number 
         wipe,
         hour: hourDone,
         minute: minuteDone,
-        opacity: clamp(Math.min(elapsed / 500, (DURATION - elapsed) / 500))
+        opacity: clamp(Math.min(elapsed / 500, (DURATION - elapsed) / 500)),
+        engage: progress(elapsed, TIMES.engage) * (1 - progress(elapsed, TIMES.disengage)),
+        tool: progress(elapsed, TIMES.toHour)
     };
 };
 
-export interface Pose {
-    body: Point,
+export interface Arm {
     shoulder: Point,
-    hand: Point,
-    restArmX: number
+    elbow: Point,
+    hand: Point
 }
 
 /**
- * The arm always has the same length: the body moves along so the hand can reach the given point.
- * Coordinates of shoulder and hand are relative to the body.
+ * Two-bone arm of constant length: the elbow bends away from the body (outward and down).
+ * The hand is stopped at full stretch when the target is out of reach.
  */
-export const poseFor = (target: Point): Pose => {
-    const side = Math.max(-1, Math.min(1, (target.x - CENTER) / SIDE_RANGE));
-    const angle = side * MAX_ARM_ANGLE;
-    const reach = { x: ARM_LENGTH * Math.sin(angle), y: ARM_LENGTH * Math.cos(angle) };
-    const shoulder = { x: SHOULDER_SIDE * side, y: SHOULDER_HEIGHT };
+export const solveArm = (shoulder: Point, target: Point, outward: number): Arm => {
+    const dx = target.x - shoulder.x;
+    const dy = target.y - shoulder.y;
+    const distance = Math.hypot(dx, dy);
+    const ux = distance > 1e-6 ? dx / distance : 0;
+    const uy = distance > 1e-6 ? dy / distance : 1;
+    const reach = Math.min(distance, ARM_LENGTH * 0.999);
+    const hand = { x: shoulder.x + ux * reach, y: shoulder.y + uy * reach };
+    const half = reach / 2;
+    const bend = Math.sqrt(Math.max(0, UPPER_ARM * UPPER_ARM - half * half));
+    const middle = { x: shoulder.x + ux * half, y: shoulder.y + uy * half };
+    const options = [ { x: -uy, y: ux }, { x: uy, y: -ux } ];
+    const preferred = { x: outward * 0.6, y: 1 };
+    const side = options[ 0 ].x * preferred.x + options[ 0 ].y * preferred.y >= options[ 1 ].x * preferred.x + options[ 1 ].y * preferred.y
+        ? options[ 0 ]
+        : options[ 1 ];
+    return { shoulder, elbow: { x: middle.x + side.x * bend, y: middle.y + side.y * bend }, hand };
+};
+
+interface Body {
+    hip: Point,
+    lean: number
+}
+
+const shoulderOf = ({ hip, lean }: Body, side: number): Point =>
+    add(hip, rotate({ x: side * SHOULDER_HALF, y: -TORSO }, lean));
+
+/**
+ * Where the body stands to reach a target with the working (right) arm: it leans towards the target,
+ * rises on its toes or bends its knees, and only steps sideways when the arm alone cannot reach.
+ */
+export const workingBody = (target: Point): Body => {
+    const lean = clamp((target.x - CENTER) / 150, -1, 1) * 12;
+    const crouch = clamp((target.y - 220) / 150);
+    const rise = clamp((220 - target.y) / 170);
+    const body: Body = {
+        hip: { x: CENTER + (target.x - CENTER) * 0.55, y: FLOOR - LEG + crouch * 55 - rise * 10 },
+        lean
+    };
+    for (let attempt = 0; attempt < 3; attempt++) {
+        const shoulder = shoulderOf(body, 1);
+        const distance = Math.hypot(target.x - shoulder.x, target.y - shoulder.y);
+        if (distance > MAX_REACH) {
+            const factor = (distance - MAX_REACH) / distance;
+            body.hip = {
+                x: body.hip.x + (target.x - shoulder.x) * factor,
+                y: clamp(body.hip.y + (target.y - shoulder.y) * factor, FLOOR - LEG - 12, FLOOR - LEG + 75)
+            };
+        }
+    }
+    return body;
+};
+
+export interface Pose {
+    hip: Point,
+    lean: number,
+    feet: [ Point, Point ],
+    working: Arm,
+    resting: Arm,
+    toolRadius: number
+}
+
+/**
+ * The whole figure at a moment: walking in and out, then working on the dial.
+ */
+export const poseAt = (elapsed: number, frame: Frame): Pose => {
+    const { engage } = frame;
+    const walking = 1 - engage;
+    const phase = elapsed / STEP_SPEED;
+    const idleX = elapsed < TIMES.walkOut[ 0 ]
+        ? mix(ENTER_X, STAND_X, progress(elapsed, TIMES.walkIn))
+        : mix(STAND_X, ENTER_X, progress(elapsed, TIMES.walkOut));
+    const idle: Body = { hip: { x: idleX, y: FLOOR - LEG - Math.abs(Math.sin(phase)) * 3 * walking }, lean: 0 };
+    const work = workingBody(frame.hand);
+
+    const sway = Math.sin(elapsed / 600) * 1.2 * engage;
+    const body: Body = {
+        hip: lerp(idle.hip, work.hip, engage),
+        lean: work.lean * engage + sway
+    };
+
+    const swing = Math.sin(phase) * walking;
+    const relaxed = (shoulder: Point, side: number): Point => ({
+        x: shoulder.x + side * 8 - side * swing * 12 + Math.sin(elapsed / 700 + side) * 2,
+        y: shoulder.y + 116
+    });
+
+    const rightShoulder = shoulderOf(body, 1);
+    const leftShoulder = shoulderOf(body, -1);
+    const stretch = clamp((body.hip.y - (FLOOR - LEG)) / 55, 0, 1.3);
+    const feet = ([ -1, 1 ] as const).map(side => ({
+        x: body.hip.x + side * (10 + stretch * 9) + side * swing * 14,
+        y: FLOOR - Math.max(0, -side * Math.sin(phase)) * walking * 10
+    })) as [ Point, Point ];
+
     return {
-        body: { x: target.x - reach.x - shoulder.x, y: target.y - reach.y - shoulder.y },
-        shoulder,
-        hand: { x: shoulder.x + reach.x, y: shoulder.y + reach.y },
-        restArmX: -SHOULDER_SIDE * side - 9
+        hip: body.hip,
+        lean: body.lean,
+        feet,
+        working: solveArm(rightShoulder, lerp(relaxed(rightShoulder, 1), frame.hand, engage), 1),
+        resting: solveArm(leftShoulder, relaxed(leftShoulder, -1), -1),
+        toolRadius: mix(20, 9, frame.tool)
     };
 };
