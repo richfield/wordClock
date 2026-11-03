@@ -3,21 +3,18 @@
   to { r: 210px; }
 }
 
+/* Must match MAN_OFFSET in SchipholClock.tsx */
 @keyframes schiphol-man {
   0% { opacity: 0; transform: translateX(-70px); }
-  12% { opacity: 1; transform: translateX(0); }
-  30% { opacity: 1; transform: translateX(85px); }
-  62% { opacity: 1; transform: translateX(85px); }
+  8% { opacity: 1; transform: translateX(0); }
+  22% { opacity: 1; transform: translateX(85px); }
+  64% { opacity: 1; transform: translateX(85px); }
   80% { opacity: 1; transform: translateX(0); }
   100% { opacity: 0; transform: translateX(-70px); }
 }
 
-.schiphol-erase-mask {
-  animation: schiphol-reveal 1.4s ease-in-out 1.6s both;
-}
-
 .schiphol-draw-mask {
-  animation: schiphol-reveal 1.8s ease-in-out 3.2s both;
+  animation: schiphol-reveal 1.4s ease-in-out 4.4s both;
 }
 
 .schiphol-man {
@@ -26,7 +23,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .schiphol-erase-mask,
   .schiphol-draw-mask,
   .schiphol-man {
     animation-duration: 0.01s;

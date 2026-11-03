@@ -19,6 +19,19 @@ export const handAngles = (time: Date): { hour: number, minute: number } => ({
 });
 
 /**
+ * Path the cloth follows when wiping the dial: a spiral from the rim to the middle.
+ */
+export const spiralPath = (startRadius = 150, endRadius = 12, turns = 3, points = 180): string =>
+    Array.from({ length: points + 1 }, (_, index) => {
+        const progress = index / points;
+        const radius = startRadius + (endRadius - startRadius) * progress;
+        const angle = -Math.PI / 2 + progress * turns * 2 * Math.PI;
+        const x = CENTER + radius * Math.cos(angle);
+        const y = CENTER + radius * Math.sin(angle);
+        return `${index === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${y.toFixed(1)}`;
+    }).join(' ');
+
+/**
  * Outline of a slightly wobbly, tapered hand pointing at angle (degrees clockwise from 12 o'clock).
  */
 export const handPath = (angle: number, length: number, width: number, seed: number): string => {

@@ -1,5 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { handAngles, handPath } from './hands';
+import { handAngles, handPath, spiralPath } from './hands';
+
+describe('spiralPath', () => {
+    it('starts at the top of the rim and ends near the middle', () => {
+        const numbers = [ ...spiralPath().matchAll(/[ML] ([\d.-]+) ([\d.-]+)/g) ].map(match => [ Number(match[ 1 ]), Number(match[ 2 ]) ]);
+        expect(numbers[ 0 ][ 0 ]).toBeCloseTo(200, 0);
+        expect(numbers[ 0 ][ 1 ]).toBeCloseTo(50, 0);
+        const last = numbers[ numbers.length - 1 ];
+        expect(Math.hypot(last[ 0 ] - 200, last[ 1 ] - 200)).toBeLessThan(15);
+    });
+});
 
 describe('handAngles', () => {
     it('moves the hour hand along with the minutes', () => {
