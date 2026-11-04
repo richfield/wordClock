@@ -195,13 +195,27 @@ const Wipe = ({ previous, hands, run, color }: WipeProps) => {
     );
 };
 
+// Thin second hand with a counterweight; it steps forward each second and does not animate the wrap from 59 to 0
+const SecondHand = ({ seconds, color }: { seconds: number, color: string }) => (
+    <g
+        style={{
+            transform: `rotate(${seconds * 6}deg)`,
+            transformOrigin: '50% 50%',
+            transformBox: 'view-box',
+            transition: seconds === 0 ? 'none' : 'transform 0.3s ease-out'
+        }}
+    >
+        <line x1={CENTER} y1={CENTER + 40} x2={CENTER} y2={CENTER - 170} stroke={color} strokeWidth='3' />
+        <circle cx={CENTER} cy={CENTER - 135} r='7' fill={color} />
+    </g>
+);
 /**
  * Inspired by Maarten Baas' "Schiphol Clock": every minute a man behind the screen
  * wipes the old hands away and paints the new ones.
  */
 const SchipholClock = (props: ClockComponentProps): JSX.Element => {
     const { time, clockSettings } = props;
-    const { backgroundColor, foreGroundColor, shadeColor, topDistance, sizeFactor } = clockSettings;
+    const { backgroundColor, foreGroundColor, shadeColor, topDistance, sizeFactor, showSeconds } = clockSettings;
     const minuteKey = Math.floor(time.getTime() / 60000);
     const drawing = useRef<Drawing | null>(null);
 
@@ -258,6 +272,7 @@ const SchipholClock = (props: ClockComponentProps): JSX.Element => {
                 ) : (
                     <HandShapes hands={hands} color={foreGroundColor} />
                 )}
+                {showSeconds && <SecondHand seconds={time.getSeconds()} color={foreGroundColor} />}
                 <circle cx={CENTER} cy={CENTER} r='9' fill={foreGroundColor} />
             </svg>
         </Container>
