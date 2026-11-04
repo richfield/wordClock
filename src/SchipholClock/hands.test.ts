@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { handAngles, handPath, spiralPath } from './hands';
+import { handAngles, handPath, spiralPath, spiralPoint, tipPoint, MINUTE_LENGTH } from './hands';
 
 describe('spiralPath', () => {
     it('starts at the top of the rim and ends near the middle', () => {
         const numbers = [ ...spiralPath().matchAll(/[ML] ([\d.-]+) ([\d.-]+)/g) ].map(match => [ Number(match[ 1 ]), Number(match[ 2 ]) ]);
         expect(numbers[ 0 ][ 0 ]).toBeCloseTo(200, 0);
-        expect(numbers[ 0 ][ 1 ]).toBeCloseTo(50, 0);
+        expect(numbers[ 0 ][ 1 ]).toBeCloseTo(10, 0);
         const last = numbers[ numbers.length - 1 ];
         expect(Math.hypot(last[ 0 ] - 200, last[ 1 ] - 200)).toBeLessThan(15);
     });
@@ -31,5 +31,18 @@ describe('handPath', () => {
         expect(path.endsWith('Z')).toBe(true);
         const ys = [ ...path.matchAll(/[ML] [\d.-]+ ([\d.-]+)/g) ].map(match => Number(match[ 1 ]));
         expect(Math.min(...ys)).toBeLessThan(60);
+    });
+});
+
+describe('spiral coverage', () => {
+    it('wipes every point of both hands, also at the tip of the minute hand', () => {
+        const samples = Array.from({ length: 4001 }, (_, index) => spiralPoint(index / 4000));
+        for (let angle = 0; angle < 360; angle += 1) {
+            for (let length = 0; length <= MINUTE_LENGTH + 5; length += 5) {
+                const point = tipPoint(angle, length);
+                const nearest = Math.min(...samples.map(sample => Math.hypot(sample.x - point.x, sample.y - point.y)));
+                expect(nearest).toBeLessThan(27);
+            }
+        }
     });
 });

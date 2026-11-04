@@ -33,9 +33,10 @@ export const tipPoint = (angle: number, length: number): Point => {
     return { x: CENTER + length * Math.sin(radians), y: CENTER - length * Math.cos(radians) };
 };
 
-const SPIRAL_START = 150;
+// Starts beyond the tip of the minute hand, so no old hand is left sticking out of the wiped area
+const SPIRAL_START = 190;
 const SPIRAL_END = 12;
-const SPIRAL_TURNS = 3;
+const SPIRAL_TURNS = 4;
 
 /**
  * Where the cloth is when wiping the dial: a spiral from the top of the rim to the middle (progress 0 to 1).
